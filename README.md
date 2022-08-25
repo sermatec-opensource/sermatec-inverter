@@ -1,7 +1,7 @@
 # sermatec-inverter
 LAN communication docs and scripts for the Sermatec solar inverter.
 
-# Protocol description
+## Protocol description
 This protocol is used by the *Sermatec* application (available for Android and iOS) for a local connection to the inverter via built-in WiFi access point or via LAN connection.
 
 Default AP's password is `gsstes123456`.
@@ -39,25 +39,39 @@ Inverter's open ports:
 
 ## Response format
 It is the same but the source and target addresses are swapped.
-
-## Commands
-| Command (in big-endian) | Function | Data in request | Response |
-| ----------------------- | -------- | --------------- | -------- |
-| `0x9800`                | Get an inverter's serial number. | - | Serial number. |
-| `0x6800`                | Send current date and time. | YEAR[2];MONTH;DAY;HOUR;MINUTES;SECONDS | - |
-| `0x0a00` | Get battery information. | - | see below |
-| `0x0b00` | Get grid status. | - | - |
-| `0x0c00` | ? | - | - |
-
-### Response format
 Notes: 
 - integers are represented in the big-endian format.
 - fractional numbers (with exceptions) are represented in the fixed-point, scaling 1/10.
 - all values are represented in the SI units (ampere, volt, watt, volt-ampere, volt-ampere reactive, hertz...).
 - data type uint16_t at address 0x00 means hi-lo integer stored at bytes 0-1.
 
-**`0x0a00`: Battery information**
+## Commands
+| Command (in big-endian) | Function |
+| ----------------------- | -------- |
+| `0x9800`                | Get system information.
+| `0x6800`                | Send current date and time. |
+| `0x0a00` | Get battery information. |
+| `0x0b00` | Get grid status. |
+| `0x0c00` | ? |
 
+### **`0x9800`: Get system information**
+**Request:** `fe 55 64 14 98 00 00 4c ae`
+
+**Response:**
+| Address | Meaning | Data type |
+| ----    | ------- | --------- |
+| 0x07 | PCU version | uint16_t |
+| 0x09 | ? | ? |
+| 0x0B | ? | ? |
+| 0x0D | Serial ID string. | string (null-terminated, max length 44 bytes) |
+
+### **`0x6800`: Send current date and time**
+YEAR[2];MONTH;DAY;HOUR;MINUTES;SECONDS
+
+### **`0x0a00`: Battery information**
+**Request:** `fe 55 64 14 0a 00 00 de ae`
+
+**Response:**
 | Address | Meaning | Data type |
 | ---- | ------- | --------- |
 | 0x07 | Battery voltage. | uint16_t fractional
@@ -72,11 +86,14 @@ Notes:
 | 0x19 | ? | ?
 
 Battery states:
-- 0x0011: ?
-- 0x0022: ?
+- 0x0011: charging
+- 0x0022: discharging
 - 0x0033: stand-by
 
-**`0x0b00`: Grid and PV information**
+### **`0x0b00`: Grid and PV information**
+**Request:** `fe 55 64 14 0b 00 00 df ae`
+
+**Response:**
 | Address | Meaning | Data type |
 | ------- | ------- | --------- |
 | 0x07 | PV1 voltage. | uint16_t fractional |
@@ -99,7 +116,8 @@ Battery states:
 | 0x37 | Grid reactive power. | int16_t |
 | 0x39 | Grid apparent power. | int16_t |
 
-**`0x0d00`: Error**
+### **`0x0d00`: Error**
+### **`0x1e00`: Error**
 
 ## Checksum
 The checksum calculation function is unknown for now.
