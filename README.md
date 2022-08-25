@@ -5,6 +5,13 @@ LAN communication docs and scripts for the Sermatec solar inverter.
 This protocol is used by the *Sermatec* application (available for Android and iOS) for a local connection to the inverter via built-in WiFi access point or via LAN connection.
 
 Default AP's password is `gsstes123456`.
+Distributor's (admin) passwords for setting parameters:
+- This password is probably hardcoded in the apk, cannot be changed.
+- Discovered passwords:
+    - Sermatec2021
+    - sermatec2021
+    - Sermatec2015
+    - Sermatec2019@Gsstes2019
 
 Integers are presented in the big-endian format (MSB first).
 
