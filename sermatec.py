@@ -1,21 +1,17 @@
 import socket
 import logging
+import asyncio
 
 class Sermatec:
 
     REQ_SYSINFO = bytes([0xfe, 0x55, 0x64, 0x14, 0x98, 0x00, 0x00, 0x4c, 0xae])
     REQ_BATTERY = bytes([0xfe, 0x55, 0x64, 0x14, 0x0a, 0x00, 0x00, 0xde, 0xae])
+    REQ_GRIDPV  = bytes([0xfe, 0x55, 0x64, 0x14, 0x0b, 0x00, 0x00, 0xdf, 0xae])
 
     def __init__(self, host : str, port : int = 8899):
         self.host = host
         self.port = port
         self.connected = False
-        try:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except:
-            raise RuntimeError("Couldn't create socket.")
-        else:
-            self.sock.settimeout(5)
 
     def __del__(self):
         pass
@@ -23,10 +19,12 @@ class Sermatec:
     def __headerCheck(self, data : bytes) -> bool:
         return data.startswith(b"\xFE\x55\x14\x64")
 
-    def __sendReq(self, toSend : bytes) -> bytes:
+    async def __sendReq(self, toSend : bytes) -> bytes:
         if self.connected:
-            self.sock.sendall(toSend)
-            data = self.sock.recv(256)
+            self.writer.write(toSend)
+            await self.writer.drain()
+
+            data = await self.reader.read(256)
 
             if len(data) == 0:
                 logging.error("No data received: connection closed.")
@@ -54,10 +52,12 @@ class Sermatec:
         else:
             return "unknown"
 
-    def connect(self) -> bool:
+    async def connect(self) -> bool:
         if not self.connected:
+
+            confut = asyncio.open_connection(host = self.host, port = self.port)
             try:
-                self.sock.connect((self.host, self.port))
+                self.reader, self.writer = await asyncio.wait_for(confut, timeout = 3)
             except:
                 logging.error("Couldn't connect to the inverter.")
                 self.connected = False
@@ -68,12 +68,14 @@ class Sermatec:
         else:
             return True
 
-    def disconnect(self) -> None:
-        self.sock.close()
-        self.connected = False
+    async def disconnect(self) -> None:
+        if self.connected:
+            self.writer.close()
+            await self.writer.wait_closed()
+            self.connected = False
 
-    def getSerial(self) -> str:
-        data = self.__sendReq(self.REQ_SYSINFO)
+    async def getSerial(self) -> str:
+        data = await self.__sendReq(self.REQ_SYSINFO)
         if len(data) < 0x0E or data[0x04:0x06] != self.REQ_SYSINFO[0x04:0x06]:
             logging.error("Bad message received.")
             return ""
@@ -83,30 +85,64 @@ class Sermatec:
         serial = data.decode('ascii')
         return serial
     
-    def getBatteryInfo(self) -> dict:
+    async def getBatteryInfo(self) -> dict:
         batInfo : dict = {}
-        data = self.__sendReq(self.REQ_BATTERY)
+        data = await self.__sendReq(self.REQ_BATTERY)
         if len(data) < 0x1B or data[0x04:0x06] != self.REQ_BATTERY[0x04:0x06]:
             logging.error("Bad message received")
             return batInfo
 
-        batInfo["voltage"] = int.from_bytes(data[0x07:0x09], byteorder = "big", signed = False) / 10.0
-        batInfo["current"] = int.from_bytes(data[0x09:0x0B], byteorder = "big", signed = False) / 10.0
-        batInfo["temperature"] = int.from_bytes(data[0x0B:0x0D], byteorder = "big", signed = False) / 10.0
-        batInfo["SOC"] = int.from_bytes(data[0x0D:0x0F], byteorder = "big", signed = False)
-        batInfo["SOH"] = int.from_bytes(data[0x0F:0x11], byteorder = "big", signed = False)
-        batInfo["state"] = self.__parseBatteryState(
+        batInfo["voltage"]      = int.from_bytes(data[0x07:0x09], byteorder = "big", signed = False) / 10.0
+        batInfo["current"]      = int.from_bytes(data[0x09:0x0B], byteorder = "big", signed = False) / 10.0
+        batInfo["temperature"]  = int.from_bytes(data[0x0B:0x0D], byteorder = "big", signed = False) / 10.0
+        batInfo["SOC"]          = int.from_bytes(data[0x0D:0x0F], byteorder = "big", signed = False)
+        batInfo["SOH"]          = int.from_bytes(data[0x0F:0x11], byteorder = "big", signed = False)
+        
+        batInfo["state"]        = self.__parseBatteryState(
             int.from_bytes(data[0x11:0x13], byteorder = "big", signed = False)
         )
-        batInfo["max_charging_current"] = int.from_bytes(data[0x13:0x15], byteorder = "big", signed = False) / 10
-        batInfo["max_discharging_current"] = int.from_bytes(data[0x15:0x17], byteorder = "big", signed = False) / 10
+
+        batInfo["max_charging_current"]     = int.from_bytes(data[0x13:0x15], byteorder = "big", signed = False) / 10
+        batInfo["max_discharging_current"]  = int.from_bytes(data[0x15:0x17], byteorder = "big", signed = False) / 10
 
         return batInfo
+    
+    async def getGridPVInfo(self) -> dict:
+        gridPVInfo : dict = {}
+        data = await self.__sendReq(self.REQ_GRIDPV)
+        if len(data) < 0x3B or data[0x04:0x06] != self.REQ_GRIDPV[0x04:0x06]:
+            logging.error("Bad message received")
+            return gridPVInfo
         
+        gridPVInfo["pv1_voltage"]           = int.from_bytes(data[0x07:0x09], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["pv1_current"]           = int.from_bytes(data[0x09:0x0B], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["pv1_power"]             = int.from_bytes(data[0x0B:0x0D], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["pv2_voltage"]           = int.from_bytes(data[0x0D:0x0F], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["pv2_current"]           = int.from_bytes(data[0x0F:0x11], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["pv2_power"]             = int.from_bytes(data[0x11:0x13], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["ab_line_voltage"]       = int.from_bytes(data[0x19:0x1B], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["a_phase_current"]       = int.from_bytes(data[0x1B:0x1D], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["a_phase_voltage"]       = int.from_bytes(data[0x21:0x23], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["bc_line_voltage"]       = int.from_bytes(data[0x23:0x25], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["b_phase_current"]       = int.from_bytes(data[0x25:0x27], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["b_phase_voltage"]       = int.from_bytes(data[0x27:0x29], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["c_phase_voltage"]       = int.from_bytes(data[0x2B:0x2D], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["ca_line_voltage"]       = int.from_bytes(data[0x2D:0x2F], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["c_phase_current"]       = int.from_bytes(data[0x2F:0x31], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["grid_frequency"]        = int.from_bytes(data[0x31:0x33], byteorder = "big", signed = False) / 100.0
+        gridPVInfo["grid_active_power"]     = int.from_bytes(data[0x35:0x37], byteorder = "big", signed = True)
+        gridPVInfo["grid_reactive_power"]   = int.from_bytes(data[0x37:0x39], byteorder = "big", signed = True)
+        gridPVInfo["grid_apparent_power"]   = int.from_bytes(data[0x39:0x3B], byteorder = "big", signed = True)
+
+        return gridPVInfo
+
+async def main():
+
+    smc = Sermatec("IP-HERE")
+    await smc.connect()
+    print(await smc.getGridPVInfo())
+    await smc.disconnect()
+
 if __name__ == "__main__":
     logging.basicConfig(level = "DEBUG")
-    smc = Sermatec("IP-HERE")
-    smc.connect()
-    print(smc.getSerial())
-    print(smc.getBatteryInfo())
-    smc.disconnect()
+    asyncio.run(main())
