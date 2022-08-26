@@ -111,7 +111,7 @@ Battery states:
 | 0x2B | C phase voltage. | uint16_t fractional |
 | 0x2D | CA line voltage. | uint16_t fractional |
 | 0x2F | C phase current. | uint16_t fractional |
-| 0x31 | Utility (mains) frequency. | uint16_t fractional (scaling 1/100) |
+| 0x31 | Grid (mains) frequency. | uint16_t fractional (scaling 1/100) |
 | 0x35 | Grid active power. | int16_t |
 | 0x37 | Grid reactive power. | int16_t |
 | 0x39 | Grid apparent power. | int16_t |
