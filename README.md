@@ -53,6 +53,9 @@ Notes:
 | `0x0a00` | Get battery information. |
 | `0x0b00` | Get grid status. |
 | `0x0c00` | ? |
+| `0x0d00` | Get load information. |
+| `0x9500` | Get working parameters. |
+| `0x6600` | Set working parameters. |
 
 ### **`0x9800`: Get system information**
 **Request:** `fe 55 64 14 98 00 00 4c ae`
@@ -116,7 +119,53 @@ Battery states:
 | 0x37 | Grid reactive power. | int16_t |
 | 0x39 | Grid apparent power. | int16_t |
 
-### **`0x0d00`: Error**
+### **`0x0d00`: Get load information**
+**Request:** `fe 55 64 14 0d 00 00 d9 ae`
+
+**Response:**
+| Address | Meaning | Data type |
+| ------- | ------- | --------- |
+| 0x0B | Current load (power consumption). | uint16_t |
+
+### **`0x9500`: Get working parameters**
+**Request:** `fe 55 64 14 95 00 00 41 ae`
+
+**Response:**
+| Address | Meaning | Data type |
+| ------- | ------- | --------- |
+| 0x0F | Upper limit of on-grid power. | uint16_t |
+| 0x13 | Working mode. | uint16_t (see note) |
+| 0x1D | Lower limit of on-grid SOC. | uint16_t |
+
+Working modes:
+- 0x0001: General Mode
+- 0x0002: Energy Storage Mode
+- code for another three modes is unknown (unable to test)
+
+### **`0x6600`: Set working parameters**
+**Request:**
+| Address | Meaning | Content |
+| ------- | ------- | --------- |
+| 0x00 | Header. | `0xfe 0x55 0x64 0x14` |
+| 0x04 | Command. | `0x66 0x00` |
+| 0x06 | Size. | `0x20` |
+| 0x07-0x0E | Zeroes. | `00...` |
+| 0x0F | Upper limit of on-grid power. | value as uint16_t |
+| 0x11-0x12 | Zeroes. | `00...` |
+| 0x13 | Working mode. See note at `0x9500`. | value as uint16_t |
+| 0x15-0x18 | Zeroes. | `00...` |
+| 0x19 | Unknown. | `0x00ee` |
+| 0x1B-0x1C | Zeroes. | `00...` |
+| 0x1D | Lower limit of on-grid SOC. | value as uint16_t |
+| 0x1F | Unknown. | `0x0001` |
+| 0x21 | Unknown. | `0x0000` |
+| 0x23 | Unknown. | `0x059F` |
+| 0x25 | Unknown. | `0x0003` |
+| 0x27 | Checksum. | ? |
+| 0x28 | Footer. | `0xAE` |
+
+**Response:** none
+
 ### **`0x1e00`: Error**
 
 ## Checksum
