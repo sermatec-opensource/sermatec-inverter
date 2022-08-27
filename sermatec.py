@@ -7,6 +7,7 @@ class Sermatec:
     REQ_SYSINFO = bytes([0xfe, 0x55, 0x64, 0x14, 0x98, 0x00, 0x00, 0x4c, 0xae])
     REQ_BATTERY = bytes([0xfe, 0x55, 0x64, 0x14, 0x0a, 0x00, 0x00, 0xde, 0xae])
     REQ_GRIDPV  = bytes([0xfe, 0x55, 0x64, 0x14, 0x0b, 0x00, 0x00, 0xdf, 0xae])
+    REQ_WPAMS   = bytes([0xfe, 0x55, 0x64, 0x14, 0x95, 0x00, 0x00, 0x41, 0xae])
 
     def __init__(self, host : str, port : int = 8899):
         self.host = host
@@ -49,6 +50,14 @@ class Sermatec:
             return "discharging"
         elif stateInt == 0x0033:
             return "stand-by"
+        else:
+            return "unknown"
+
+    def __parseWorkingMode(self, modeInt : int) -> str:
+        if modeInt == 0x0001:
+            return "General Mode"
+        elif modeInt == 0x0002:
+            return "Energy Storage Mode"
         else:
             return "unknown"
 
@@ -135,12 +144,28 @@ class Sermatec:
         gridPVInfo["grid_apparent_power"]   = int.from_bytes(data[0x39:0x3B], byteorder = "big", signed = True)
 
         return gridPVInfo
+    
+    async def getWorkingParameters(self) -> dict:
+        workingParams : dict = {}
+        data = await self.__sendReq(self.REQ_WPAMS)
+        if len(data) < 0x9D or data[0x04:0x06] != self.REQ_WPAMS[0x04:0x06]:
+            logging.error("Bad message received")
+            return workingParams
+        
+        workingParams["upper_limit_ongrid_power"] = int.from_bytes(data[0x0F:0x11], byteorder = "big", signed = False)
+        workingParams["working_mode"] = self.__parseWorkingMode(
+            int.from_bytes(data[0x13:0x15], byteorder = "big", signed = False)
+        )
+        workingParams["lower_limit_ongrid_soc"] = int.from_bytes(data[0x1D:0x1F], byteorder = "big", signed = False)
+
+        return workingParams
+
 
 async def main():
 
     smc = Sermatec("IP-HERE")
     await smc.connect()
-    print(await smc.getGridPVInfo())
+    print(await smc.getWorkingParameters())
     await smc.disconnect()
 
 if __name__ == "__main__":
