@@ -78,7 +78,7 @@ YEAR[2];MONTH;DAY;HOUR;MINUTES;SECONDS
 | Address | Meaning | Data type |
 | ---- | ------- | --------- |
 | 0x07 | Battery voltage. | uint16_t fractional
-| 0x09 | Battery current. | uint16_t fractional
+| 0x09 | Battery current. | int16_t fractional
 | 0x0B | Battery temperature. | uint16_t fractional
 | 0x0D | Battery state of charge. | uint16_t
 | 0x0F | Battery state of health. | uint16_t
@@ -101,10 +101,10 @@ Battery states:
 | ------- | ------- | --------- |
 | 0x07 | PV1 voltage. | uint16_t fractional |
 | 0x09 | PV1 current. | uint16_t fractional |
-| 0x0B | PV1 power. | uint16_t fractional |
+| 0x0B | PV1 power. | uint16_t |
 | 0x0D | PV2 voltage. | uint16_t fractional |
 | 0x0F | PV2 current. | uint16_t fractional |
-| 0x11 | PV2 power. | uint16_t fractional |
+| 0x11 | PV2 power. | uint16_t |
 | 0x19 | AB line voltage | uint16_t fractional |
 | 0x1B | A phase current. | uint16_t fractional |
 | 0x21 | A phase voltage. | uint16_t fractional |
