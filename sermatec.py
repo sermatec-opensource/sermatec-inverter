@@ -7,6 +7,7 @@ class Sermatec:
     REQ_BATTERY = bytes([0xfe, 0x55, 0x64, 0x14, 0x0a, 0x00, 0x00, 0xde, 0xae])
     REQ_GRIDPV  = bytes([0xfe, 0x55, 0x64, 0x14, 0x0b, 0x00, 0x00, 0xdf, 0xae])
     REQ_WPAMS   = bytes([0xfe, 0x55, 0x64, 0x14, 0x95, 0x00, 0x00, 0x41, 0xae])
+    REQ_LOAD    = bytes([0xfe, 0x55, 0x64, 0x14, 0x0d, 0x00, 0x00, 0x0d9, 0xae])
 
     def __init__(self, logger : logging.Logger, host : str, port : int = 8899):
         self.host = host
@@ -163,11 +164,22 @@ class Sermatec:
 
         return workingParams
 
+    async def getLoad(self) -> int:
+        load : int = None
+        data = await self.__sendReq(self.REQ_LOAD)
+        if len(data) < 0x0F or data[0x04:0x06] != self.REQ_LOAD[0x04:0x06]:
+            self.logger.debug("Bad message received")
+            return load
+        
+        load = int.from_bytes(data[0x0B:0x0D], byteorder = "big", signed = False)
+        return load
+
+
 async def main():
 
-    smc = Sermatec("IP-HERE")
+    smc = Sermatec(logging, "IP-HERE")
     await smc.connect()
-    print(await smc.getWorkingParameters())
+    print(await smc.getLoad())
     await smc.disconnect()
 
 if __name__ == "__main__":
