@@ -1,3 +1,5 @@
 /dist/
 /testpy/
 __pycache__/
+/.tox/
+/.vscode/
