@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sermatec-inverter"
+version = "2022.02"
+authors = [
+  { name="Ondrej Golasowski", email="golasowski.o@gmail.com" },
+]
+description = "Sermatec Solar Inverter communication script"
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/andreondra/sermatec-inverter"
+"Bug Tracker" = "https://github.com/andreondra/sermatec-inverter/issues"
