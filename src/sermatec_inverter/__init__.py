@@ -173,15 +173,3 @@ class Sermatec:
         
         load = int.from_bytes(data[0x0B:0x0D], byteorder = "big", signed = False)
         return load
-
-
-async def main():
-
-    smc = Sermatec(logging, "IP-HERE")
-    await smc.connect()
-    print(await smc.getLoad())
-    await smc.disconnect()
-
-if __name__ == "__main__":
-    logging.basicConfig(level = "DEBUG")
-    asyncio.run(main())
