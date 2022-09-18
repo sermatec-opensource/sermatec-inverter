@@ -90,7 +90,7 @@ Battery states:
 - 0x0022: discharging
 - 0x0033: stand-by
 
-### **`0x0b00`: Grid and PV information**
+### **`0x0b00`: Grid, PV and backup information**
 **Request:** `fe 55 64 14 0b 00 00 df ae`
 
 **Response:**
@@ -115,6 +115,16 @@ Battery states:
 | 0x35 | Grid active power. | int16_t |
 | 0x37 | Grid reactive power. | int16_t |
 | 0x39 | Grid apparent power. | int16_t |
+| 0x61 | Backup Phase A voltage. | uint16_t fractional |
+| 0x63 | Backup Phase B voltage. | uint16_t fractional |
+| 0x65 | Backup Phase C voltage. | uint16_t fractional |
+| 0x67 | Backup frequency. | uint16_t fractional (scaling 1/100) |
+| 0x69 | Backup Phase A current. | uint16_t fractional |
+| 0x6B | Backup Phase B current. | uint16_t fractional |
+| 0x6D | Backup Phase C current. | uint16_t fractional |
+| 0x71 | Backup active power. | int16_t |
+| 0x73 | Backup reactive power. | int16_t |
+| 0x75 | Backup apparent power. | int16_t |
 
 ### **`0x0d00`: Get load information**
 **Request:** `fe 55 64 14 0d 00 00 d9 ae`
