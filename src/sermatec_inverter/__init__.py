@@ -127,26 +127,35 @@ class Sermatec:
             self.logger.debug("Bad message received")
             return gridPVInfo
         
-        gridPVInfo["pv1_voltage"]           = int.from_bytes(data[0x07:0x09], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["pv1_current"]           = int.from_bytes(data[0x09:0x0B], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["pv1_power"]             = int.from_bytes(data[0x0B:0x0D], byteorder = "big", signed = False)
-        gridPVInfo["pv2_voltage"]           = int.from_bytes(data[0x0D:0x0F], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["pv2_current"]           = int.from_bytes(data[0x0F:0x11], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["pv2_power"]             = int.from_bytes(data[0x11:0x13], byteorder = "big", signed = False)
-        gridPVInfo["ab_line_voltage"]       = int.from_bytes(data[0x19:0x1B], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["a_phase_current"]       = int.from_bytes(data[0x1B:0x1D], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["a_phase_voltage"]       = int.from_bytes(data[0x21:0x23], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["bc_line_voltage"]       = int.from_bytes(data[0x23:0x25], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["b_phase_current"]       = int.from_bytes(data[0x25:0x27], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["b_phase_voltage"]       = int.from_bytes(data[0x27:0x29], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["c_phase_voltage"]       = int.from_bytes(data[0x2B:0x2D], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["ca_line_voltage"]       = int.from_bytes(data[0x2D:0x2F], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["c_phase_current"]       = int.from_bytes(data[0x2F:0x31], byteorder = "big", signed = False) / 10.0
-        gridPVInfo["grid_frequency"]        = int.from_bytes(data[0x31:0x33], byteorder = "big", signed = False) / 100.0
-        gridPVInfo["grid_active_power"]     = int.from_bytes(data[0x35:0x37], byteorder = "big", signed = True)
-        gridPVInfo["grid_reactive_power"]   = int.from_bytes(data[0x37:0x39], byteorder = "big", signed = True)
-        gridPVInfo["grid_apparent_power"]   = int.from_bytes(data[0x39:0x3B], byteorder = "big", signed = True)
-
+        gridPVInfo["pv1_voltage"]               = int.from_bytes(data[0x07:0x09], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["pv1_current"]               = int.from_bytes(data[0x09:0x0B], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["pv1_power"]                 = int.from_bytes(data[0x0B:0x0D], byteorder = "big", signed = False)
+        gridPVInfo["pv2_voltage"]               = int.from_bytes(data[0x0D:0x0F], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["pv2_current"]               = int.from_bytes(data[0x0F:0x11], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["pv2_power"]                 = int.from_bytes(data[0x11:0x13], byteorder = "big", signed = False)
+        gridPVInfo["ab_line_voltage"]           = int.from_bytes(data[0x19:0x1B], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["a_phase_current"]           = int.from_bytes(data[0x1B:0x1D], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["a_phase_voltage"]           = int.from_bytes(data[0x21:0x23], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["bc_line_voltage"]           = int.from_bytes(data[0x23:0x25], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["b_phase_current"]           = int.from_bytes(data[0x25:0x27], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["b_phase_voltage"]           = int.from_bytes(data[0x27:0x29], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["c_phase_voltage"]           = int.from_bytes(data[0x2B:0x2D], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["ca_line_voltage"]           = int.from_bytes(data[0x2D:0x2F], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["c_phase_current"]           = int.from_bytes(data[0x2F:0x31], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["grid_frequency"]            = int.from_bytes(data[0x31:0x33], byteorder = "big", signed = False) / 100.0
+        gridPVInfo["grid_active_power"]         = int.from_bytes(data[0x35:0x37], byteorder = "big", signed = True)
+        gridPVInfo["grid_reactive_power"]       = int.from_bytes(data[0x37:0x39], byteorder = "big", signed = True)
+        gridPVInfo["grid_apparent_power"]       = int.from_bytes(data[0x39:0x3B], byteorder = "big", signed = True)
+        gridPVInfo["backup_a_phase_voltage"]    = int.from_bytes(data[0x61:0x63], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["backup_b_phase_voltage"]    = int.from_bytes(data[0x63:0x65], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["backup_c_phase_voltage"]    = int.from_bytes(data[0x65:0x67], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["backup_frequency"]          = int.from_bytes(data[0x67:0x69], byteorder = "big", signed = False) / 100.0
+        gridPVInfo["backup_a_phase_current"]    = int.from_bytes(data[0x69:0x6B], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["backup_b_phase_current"]    = int.from_bytes(data[0x6B:0x6D], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["backup_c_phase_current"]    = int.from_bytes(data[0x6D:0x6F], byteorder = "big", signed = False) / 10.0
+        gridPVInfo["backup_active_power"]       = int.from_bytes(data[0x71:0x73], byteorder = "big", signed = True)
+        gridPVInfo["backup_reactive_power"]     = int.from_bytes(data[0x73:0x75], byteorder = "big", signed = True)
+        gridPVInfo["backup_apparent_power"]     = int.from_bytes(data[0x75:0x77], byteorder = "big", signed = True)
         return gridPVInfo
     
     async def getWorkingParameters(self) -> dict:
