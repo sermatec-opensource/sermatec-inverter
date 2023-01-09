@@ -7,7 +7,7 @@ Distributor's (admin) passwords for setting parameters:
 - This password is probably hardcoded in the apk, cannot be changed.
 - Discovered passwords:
     - Sermatec2021
-    - sermatec2021
+    - sermatec2021 - confirmed working in the app version 1.7.5
     - Sermatec2015
     - Sermatec2019@Gsstes2019
 
