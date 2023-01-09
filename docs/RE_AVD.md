@@ -18,7 +18,7 @@ TODO
 
 ## Appendix
 ### A: Connecting the inverter to your network.
-The official application has a hard-coded IP 10.10.100.254, which is a fixed IP address of the inverter in the local connection mode. This mode is unpractical because it forces you to stand next to the inverter to have a reliable connection. This chapter describes how to trick the app to think you are connected directly to the inverter even though you might be located 400 km away and connected via the VPN.
+The official application has a hard-coded IP 10.10.100.254, which is a fixed IP address of the inverter in the local connection mode. This mode is impractical because it forces you to stand next to the inverter to have a reliable connection. This chapter describes how to trick the app to think you are connected directly to the inverter even though you might be located 400 km away and connected via the VPN.
 
 First things first. The inverter's WiFi module works in two modes - station and AP mode - which could be enabled simultaneously.
 
