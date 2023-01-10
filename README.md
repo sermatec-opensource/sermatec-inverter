@@ -1,3 +1,5 @@
+![License badge](https://img.shields.io/github/license/andreondra/sermatec-inverter?style=for-the-badge)
+
 # Sermatec Solar Inverter
 This repository contains local API documentation for the Sermatec solar inverter and communication scripts.
 
