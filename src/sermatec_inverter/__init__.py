@@ -22,7 +22,7 @@ class Sermatec:
         return data.startswith(b"\xFE\x55\x14\x64")
 
     async def __sendReq(self, toSend : bytes) -> bytes:
-        if self.connected:
+        if self.isConnected():
             self.writer.write(toSend)
             await self.writer.drain()
 
@@ -63,7 +63,7 @@ class Sermatec:
             return "unknown"
 
     async def connect(self) -> bool:
-        if not self.connected:
+        if not self.isConnected():
 
             confut = asyncio.open_connection(host = self.host, port = self.port)
             try:
