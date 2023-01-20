@@ -1,0 +1,7 @@
+.idea/
+assets/
+docs/
+.gitignore
+LICENSE
+pyproject.toml
+README.md
