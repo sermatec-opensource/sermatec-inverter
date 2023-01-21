@@ -3,11 +3,18 @@ import asyncio
 
 class Sermatec:
 
-    REQ_SYSINFO = bytes([0xfe, 0x55, 0x64, 0x14, 0x98, 0x00, 0x00, 0x4c, 0xae])
-    REQ_BATTERY = bytes([0xfe, 0x55, 0x64, 0x14, 0x0a, 0x00, 0x00, 0xde, 0xae])
-    REQ_GRIDPV  = bytes([0xfe, 0x55, 0x64, 0x14, 0x0b, 0x00, 0x00, 0xdf, 0xae])
-    REQ_WPAMS   = bytes([0xfe, 0x55, 0x64, 0x14, 0x95, 0x00, 0x00, 0x41, 0xae])
-    REQ_LOAD    = bytes([0xfe, 0x55, 0x64, 0x14, 0x0d, 0x00, 0x00, 0x0d9, 0xae])
+    REQ_COMMANDS = {
+        "systemInformation"   : bytes([0x98]),
+        "batteryStatus"       : bytes([0x0a]),
+        "gridPVStatus"        : bytes([0x0b]),
+        "workingParameters"   : bytes([0x95]),
+        "load"                : bytes([0x0d])
+    }
+
+    REQ_SIGNATURE           = bytes([0xfe, 0x55])
+    REQ_APP_ADDRESS         = bytes([0x64])
+    REQ_INVERTER_ADDRESS    = bytes([0x14])
+    REQ_FOOTER              = bytes([0xae])
 
     def __init__(self, logger : logging.Logger, host : str, port : int = 8899):
         self.host = host
@@ -21,9 +28,32 @@ class Sermatec:
     def __headerCheck(self, data : bytes) -> bool:
         return data.startswith(b"\xFE\x55\x14\x64")
 
-    async def __sendReq(self, toSend : bytes) -> bytes:
+    def __calculateChecksum(self, data : bytes) -> bytes:
+        checksum : int = 0x0f
+        
+        for byte in data:
+            checksum = (checksum & 0xff) ^ byte
+        
+        self.logger.debug(f"Calculated checksum: {hex(checksum)}")
+
+        return checksum.to_bytes(1)
+
+    def __buildCommand(self, commandName : str) -> bytes:
+        if not commandName in self.REQ_COMMANDS:
+            raise KeyError(f"Specified command \"{commandName}\" does not exist.")
+        
+        command : bytearray = bytearray([*self.REQ_SIGNATURE, *self.REQ_APP_ADDRESS, *self.REQ_INVERTER_ADDRESS, *self.REQ_COMMANDS[commandName], 0x00, 0x00])
+        command += self.__calculateChecksum(command)
+        command += self.REQ_FOOTER
+
+        self.logger.debug(f"Built command: {[hex(x) for x in command]}")
+
+        return command
+          
+    async def __sendCommandAndReceiveData(self, commandName : str) -> bytes:
         if self.isConnected():
-            self.writer.write(toSend)
+            dataToSend = self.__buildCommand(commandName)
+            self.writer.write(dataToSend)
             await self.writer.drain()
 
             data = await self.reader.read(256)
@@ -88,8 +118,8 @@ class Sermatec:
             self.connected = False
 
     async def getSerial(self) -> str:
-        data = await self.__sendReq(self.REQ_SYSINFO)
-        if len(data) < 0x0E or data[0x04:0x06] != self.REQ_SYSINFO[0x04:0x06]:
+        data = await self.__sendCommandAndReceiveData("systemInformation")
+        if len(data) < 0x0E or data[0x04:0x05] != self.REQ_COMMANDS["systemInformation"]:
             self.logger.debug("Bad message received.")
             return ""
 
@@ -100,8 +130,8 @@ class Sermatec:
     
     async def getBatteryInfo(self) -> dict:
         batInfo : dict = {}
-        data = await self.__sendReq(self.REQ_BATTERY)
-        if len(data) < 0x1B or data[0x04:0x06] != self.REQ_BATTERY[0x04:0x06]:
+        data = await self.__sendCommandAndReceiveData("batteryStatus")
+        if len(data) < 0x1B or data[0x04:0x05] != self.REQ_COMMANDS["batteryStatus"]:
             self.logger.debug("Bad message received")
             return batInfo
 
@@ -122,8 +152,8 @@ class Sermatec:
     
     async def getGridPVInfo(self) -> dict:
         gridPVInfo : dict = {}
-        data = await self.__sendReq(self.REQ_GRIDPV)
-        if len(data) < 0x3B or data[0x04:0x06] != self.REQ_GRIDPV[0x04:0x06]:
+        data = await self.__sendCommandAndReceiveData("gridPVStatus")
+        if len(data) < 0x3B or data[0x04:0x05] != self.REQ_COMMANDS["gridPVStatus"]:
             self.logger.debug("Bad message received")
             return gridPVInfo
         
@@ -160,8 +190,8 @@ class Sermatec:
     
     async def getWorkingParameters(self) -> dict:
         workingParams : dict = {}
-        data = await self.__sendReq(self.REQ_WPAMS)
-        if len(data) < 0x9D or data[0x04:0x06] != self.REQ_WPAMS[0x04:0x06]:
+        data = await self.__sendCommandAndReceiveData("workingParameters")
+        if len(data) < 0x9D or data[0x04:0x05] != self.REQ_COMMANDS["workingParameters"]:
             self.logger.debug("Bad message received")
             return workingParams
         
@@ -175,8 +205,8 @@ class Sermatec:
 
     async def getLoad(self) -> int:
         load : int = None
-        data = await self.__sendReq(self.REQ_LOAD)
-        if len(data) < 0x0F or data[0x04:0x06] != self.REQ_LOAD[0x04:0x06]:
+        data = await self.__sendCommandAndReceiveData("load")
+        if len(data) < 0x0F or data[0x04:0x05] != self.REQ_COMMANDS["load"]:
             self.logger.debug("Bad message received")
             return load
         
