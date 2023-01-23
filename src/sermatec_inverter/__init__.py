@@ -24,9 +24,40 @@ class Sermatec:
 
     def __del__(self):
         pass
+    
+    def __checkResponseIntegrity(self, response : bytes, expectedCommandByte : bytes) -> bool:
+        # Length check.
+        if len(response) < 8: return False
 
-    def __headerCheck(self, data : bytes) -> bool:
-        return data.startswith(b"\xFE\x55\x14\x64")
+        # Signature check.
+        if response[0x00:0x02] != self.REQ_SIGNATURE:
+            logging.debug("Bad response signature.")
+            return False
+        # Sender + receiver check.
+        if response[0x02:0x03] != self.REQ_INVERTER_ADDRESS:
+            logging.debug("Bad response sender address.")
+            return False
+        if response[0x03:0x04] != self.REQ_APP_ADDRESS:
+            logging.debug("Bad response recipient address.")
+            return False
+        # Response command check.
+        if response[0x04:0x05] != expectedCommandByte:
+            logging.debug("Bad response expected command.")
+            return False
+        # Zero.
+        if response[0x05] != 0:
+            logging.debug("No zero at response position 0x00.")
+            return False
+        # Checksum verification.
+        if response[-0x02:-0x01] != self.__calculateChecksum(response[:len(response) - 2]):
+            logging.debug(f"Bad response checksum: {response[-0x03:-0x02].hex()}")
+            return False
+        # Footer check.
+        if response[-0x01] != int.from_bytes(self.REQ_FOOTER):
+            logging.debug("Bad response footer.")
+            return False
+
+        return True
 
     def __calculateChecksum(self, data : bytes) -> bytes:
         checksum : int = 0x0f
@@ -57,22 +88,22 @@ class Sermatec:
             await self.writer.drain()
 
             data = await self.reader.read(256)
+            self.logger.debug(f"Received data: { data.hex(' ', 1) }")
 
             if len(data) == 0:
-                self.logger.debug("No data received: connection closed.")
+                self.logger.error(f"No data received when issued command {commandName}: connection closed by the inverter.")
                 self.connected = False
-                return b""
+                raise ConnectionAbortedError()
             
-            if not self.__headerCheck(data):
-                self.logger.debug("Bad header in data received.")
-                return b""
-            
-            self.logger.debug(data.hex(" ", 1))
+            if not self.__checkResponseIntegrity(data, self.REQ_COMMANDS[commandName]):
+                self.logger.error(f"Command {commandName} response data malformed.")
+                raise ValueError()
 
             return data
+
         else:
-            self.logger.debug("Can't send request: not connected.")
-            return b""
+            self.logger.error("Can't send request: not connected.")
+            raise RuntimeError("Can't send request: not connected.")
     
     def __parseBatteryState(self, stateInt : int) -> str:
         if stateInt == 0x0011:
@@ -99,7 +130,7 @@ class Sermatec:
             try:
                 self.reader, self.writer = await asyncio.wait_for(confut, timeout = 3)
             except:
-                self.logger.debug("Couldn't connect to the inverter.")
+                self.logger.error("Couldn't connect to the inverter.")
                 self.connected = False
                 return False
             else:
@@ -119,10 +150,6 @@ class Sermatec:
 
     async def getSerial(self) -> str:
         data = await self.__sendCommandAndReceiveData("systemInformation")
-        if len(data) < 0x0E or data[0x04:0x05] != self.REQ_COMMANDS["systemInformation"]:
-            self.logger.debug("Bad message received.")
-            return ""
-
         data = data[0x0D:]
         data = data.split(b"\x00", 1)[0]
         serial = data.decode('ascii')
@@ -131,9 +158,6 @@ class Sermatec:
     async def getBatteryInfo(self) -> dict:
         batInfo : dict = {}
         data = await self.__sendCommandAndReceiveData("batteryStatus")
-        if len(data) < 0x1B or data[0x04:0x05] != self.REQ_COMMANDS["batteryStatus"]:
-            self.logger.debug("Bad message received")
-            return batInfo
 
         batInfo["battery_voltage"]      = int.from_bytes(data[0x07:0x09], byteorder = "big", signed = False) / 10.0
         batInfo["battery_current"]      = int.from_bytes(data[0x09:0x0B], byteorder = "big", signed = True) / 10.0
@@ -153,9 +177,6 @@ class Sermatec:
     async def getGridPVInfo(self) -> dict:
         gridPVInfo : dict = {}
         data = await self.__sendCommandAndReceiveData("gridPVStatus")
-        if len(data) < 0x3B or data[0x04:0x05] != self.REQ_COMMANDS["gridPVStatus"]:
-            self.logger.debug("Bad message received")
-            return gridPVInfo
         
         gridPVInfo["pv1_voltage"]               = int.from_bytes(data[0x07:0x09], byteorder = "big", signed = False) / 10.0
         gridPVInfo["pv1_current"]               = int.from_bytes(data[0x09:0x0B], byteorder = "big", signed = False) / 10.0
@@ -191,9 +212,6 @@ class Sermatec:
     async def getWorkingParameters(self) -> dict:
         workingParams : dict = {}
         data = await self.__sendCommandAndReceiveData("workingParameters")
-        if len(data) < 0x9D or data[0x04:0x05] != self.REQ_COMMANDS["workingParameters"]:
-            self.logger.debug("Bad message received")
-            return workingParams
         
         workingParams["upper_limit_ongrid_power"] = int.from_bytes(data[0x0F:0x11], byteorder = "big", signed = False)
         workingParams["working_mode"] = self.__parseWorkingMode(
@@ -206,9 +224,6 @@ class Sermatec:
     async def getLoad(self) -> int:
         load : int = None
         data = await self.__sendCommandAndReceiveData("load")
-        if len(data) < 0x0F or data[0x04:0x05] != self.REQ_COMMANDS["load"]:
-            self.logger.debug("Bad message received")
-            return load
         
         load = int.from_bytes(data[0x0B:0x0D], byteorder = "big", signed = False)
         return load
