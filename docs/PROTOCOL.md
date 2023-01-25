@@ -1,15 +1,15 @@
-# Protocol description
+# FE 55 Protocol description
 This protocol is used by the *Sermatec* application (available for Android and iOS) for a local connection to the inverter via built-in WiFi access point or via LAN connection.
 
 Default AP's password is `gsstes123456`.
 
 Distributor's (admin) passwords for setting parameters:
-- This password is probably hardcoded in the apk, cannot be changed.
+- This password is hardcoded in the apk, it cannot be changed.
 - Discovered passwords:
     - Sermatec2021
     - sermatec2021 - confirmed working in the app version 1.7.5
     - Sermatec2015
-    - Sermatec2019@Gsstes2019
+    - Sermatec2019@Gsstes2019 - used as a RC4 key
 
 Integers are presented in the big-endian format (MSB first).
 
@@ -19,12 +19,12 @@ Inverter's open ports:
     - username: admin
     - password: admin
 - 8000: ?
-- 8899: API port
+- 8899: API port (this protocol)
 
 ## Request format
 | Byte | Value |
 | ---- | ----- |
-| 0    | `0xFE`  |
+| 0    | `0xfe`  |
 | 1    | `0x55`  |
 | 2    | source (`0x64`) |
 | 3    | target (`0x14`) |
@@ -32,7 +32,7 @@ Inverter's open ports:
 | 6    | message length |
 | 7-n  | data |
 | n+1  | checksum |
-| n+2  | `0xAE` |
+| n+2  | `0xae` |
 
 ## Response format
 It is the same but the source and target addresses are swapped.
@@ -40,7 +40,7 @@ Notes:
 - integers are represented in the big-endian format.
 - fractional numbers (with exceptions) are represented in the fixed-point, scaling 1/10.
 - all values are represented in the SI units (ampere, volt, watt, volt-ampere, volt-ampere reactive, hertz...).
-- data type uint16_t at address 0x00 means hi-lo integer stored at bytes 0-1.
+- data type uint16_t at address `0x00` means hi-lo integer stored at bytes 0-1.
 
 ## Commands
 | Command (in big-endian) | Function |
@@ -176,4 +176,14 @@ Working modes:
 ### **`0x1e00`: Error**
 
 ## Checksum
-The checksum calculation function is unknown for now.
+The checksum is calculated with a simple formula: xor all bytes until the checksum byte position, then xor with `0f`.
+
+See following pseudocode:
+```
+let checksum = 0x0f
+let data = a part of a request to or response from inverter
+for every byte in data:
+    checksum = checksum ⊻ byte
+```
+
+Example: let's calculate a checksum for the battery information request. The header stays the same, the command is 0x0a followed by 0x00 and the message length is 0. The message looks like this: `fe 55 64 14 0a 00 00`. Checksum will be calculated using the formula above: 0f ⊻ fe ⊻ 55 ⊻ 64 ⊻ 14 ⊻ 0a ⊻ 00 ⊻ 00 = de. We will attach the checksum and the header to the message and we are finished: `fe 55 64 14 0a 00 00 de ae`.
