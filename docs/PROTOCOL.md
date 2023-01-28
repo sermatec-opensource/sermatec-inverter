@@ -61,6 +61,7 @@ Notes:
 | `0x6800`                | Send current date and time. |
 | `0x0a00`                | Get battery information.    |
 | `0x0b00`                | Get grid status.            |
+| `0xbb00`                | ?                           |
 | `0x0c00`                | ?                           |
 | `0x0d00`                | Get load information.       |
 | `0x9500`                | Get working parameters.     |
@@ -123,7 +124,6 @@ Battery states:
 | 4-5                      | 2 bytes  | PV1 power.              | unsigned int16                            |
 | 6-7                      | 2 bytes  | PV2 voltage.            | unsigned int16 fractional (scaling 1/10)  |
 | 8-9                      | 2 bytes  | PV2 current.            | unsigned int16 fractional (scaling 1/10)  |
-| 10-11                    | 2 bytes  | PV2 power.              | unsigned int16                            |
 | 10-11                    | 2 bytes  | PV2 power.              | unsigned int16                            |
 | 12-17                    | 6 bytes  | ??                      | ??                                        |
 | 18-19                    | 2 bytes  | AB line voltage         | unsigned int16 fractional (scaling 1/10)  |
@@ -202,7 +202,8 @@ Working modes:
 
 **Response:** none
 
-### **`0x1e00`: Error**
+### `0x1e00`: Error
+### `0xbb00`: Error
 
 ## Checksum
 The checksum is calculated with a simple formula: xor all bytes until the checksum byte position, then xor with `0f`.
