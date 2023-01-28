@@ -21,21 +21,33 @@ Inverter's open ports:
 - 8000: ?
 - 8899: API port (this protocol)
 
-## Request format
-| Byte | Value |
-| ---- | ----- |
-| 0    | `0xfe`  |
-| 1    | `0x55`  |
-| 2    | source (`0x64`) |
-| 3    | target (`0x14`) |
-| 4-5  | command |
-| 6    | message length |
-| 7-n  | data |
-| n+1  | checksum |
-| n+2  | `0xae` |
+## Request Datagram format
+| Address | Length                 | Description       | Value                             |
+|---------|------------------------|-------------------|-----------------------------------|
+| 0-1     | 2 bytes                | Preamble          | `0xfe55`                          |
+| 2       | 1 byte                 | Source Identifier | `0x64`                            |
+| 3       | 1 byte                 | Target Identifier | `0x14`                            |
+| 4-5     | 2 bytes                | Command           | [See Commands section](#commands) |
+| 6       | 1 byte                 | Message Length    | **Varying**                       |
+| 7-n     | *Message Length* bytes | Message           | **Varying**                       |
+| n+1     | 1 byte                 | Checksum          | [See Checksum section](#checksum) |
+| n+2     | 1 byte                 | Termination byte  | `0xae`                            |
 
-## Response format
+## Response Datagram format
+
 It is the same but the source and target addresses are swapped.
+
+| Address | Length                 | Description                               | Value                             |
+|---------|------------------------|-------------------------------------------|-----------------------------------|
+| 0-1     | 2 bytes                | Preamble                                  | `0xfe55`                          |
+| 2       | 1 byte                 | Target Identifier                         | `0x14`                            |
+| 3       | 1 byte                 | Source Identifier                         | `0x64`                            |
+| 4-5     | 2 bytes                | Command that the response is answering to | [See Commands section](#commands) |
+| 6       | 1 byte                 | Message Length                            | **Varying**                       |
+| 7-n     | *Message Length* bytes | Message                                   | **Varying**                       |
+| n+1     | 1 byte                 | Checksum                                  | [See Checksum section](#checksum) |
+| n+2     | 1 byte                 | Termination byte                          | `0xae`                            |
+
 Notes: 
 - integers are represented in the big-endian format.
 - fractional numbers (with exceptions) are represented in the fixed-point, scaling 1/10.
@@ -43,88 +55,105 @@ Notes:
 - data type uint16_t at address `0x00` means hi-lo integer stored at bytes 0-1.
 
 ## Commands
-| Command (in big-endian) | Function |
-| ----------------------- | -------- |
-| `0x9800`                | Get system information.
+| Command (in big-endian) | Function                    |
+|-------------------------|-----------------------------|
+| `0x9800`                | Get system information.     |
 | `0x6800`                | Send current date and time. |
-| `0x0a00` | Get battery information. |
-| `0x0b00` | Get grid status. |
-| `0x0c00` | ? |
-| `0x0d00` | Get load information. |
-| `0x9500` | Get working parameters. |
-| `0x6600` | Set working parameters. |
+| `0x0a00`                | Get battery information.    |
+| `0x0b00`                | Get grid status.            |
+| `0x0c00`                | ?                           |
+| `0x0d00`                | Get load information.       |
+| `0x9500`                | Get working parameters.     |
+| `0x6600`                | Set working parameters.     |
 
-### **`0x9800`: Get system information**
-**Request:** `fe 55 64 14 98 00 00 4c ae`
+### `0x9800`: Get system information
+**Request example:** `fe 55 64 14 98 00 00 4c ae`
 
-**Response:**
-| Address | Meaning | Data type |
-| ----    | ------- | --------- |
-| 0x07 | PCU version | uint16_t |
-| 0x09 | ? | ? |
-| 0x0B | ? | ? |
-| 0x0D | Serial ID string. | string (null-terminated, max length 44 bytes) |
+**Request message:** `0x00`
 
-### **`0x6800`: Send current date and time**
-YEAR[2];MONTH;DAY;HOUR;MINUTES;SECONDS
+**Response message:**
 
-### **`0x0a00`: Battery information**
-**Request:** `fe 55 64 14 0a 00 00 de ae`
+| Address in message block | Length       | Meaning           | Data type                                     |
+|--------------------------|--------------|-------------------|-----------------------------------------------|
+| 0-1                      | 2 bytes      | PCU version       | unsigned int16                                |
+| 2-5                      | 4 bytes      | ??                | ??                                            |
+| 6-n (until `0x00`)       | varying size | Serial ID string. | string (null-terminated, max length 44 bytes) |
 
-**Response:**
-| Address | Meaning | Data type |
-| ---- | ------- | --------- |
-| 0x07 | Battery voltage. | uint16_t fractional
-| 0x09 | Battery current. | int16_t fractional
-| 0x0B | Battery temperature. | uint16_t fractional
-| 0x0D | Battery state of charge. | uint16_t
-| 0x0F | Battery state of health. | uint16_t
-| 0x11 | Battery state (see note). | uint16_t
-| 0x13 | Battery maximal charging current. | uint16_t fractional
-| 0x15 | Battery maximal discharging current. | uint16_t fractional
-| 0x17 | ? | ?
-| 0x19 | ? | ?
+### `0x6800`: Send current date and time
+**Request example:** `fe 55 64 14 68 00 ?? ?? ae`
+
+**Request Message:** YEAR[2];MONTH;DAY;HOUR;MINUTES;SECONDS
+
+**Response Message:** Still unknown
+
+### `0x0a00`: Battery information
+**Request example:** `fe 55 64 14 0a 00 00 de ae`
+
+**Request message:** `0x00`
+
+**Response message:**
+
+| Address in message block | Length  | Meaning                              | Data type                                |
+|--------------------------|---------|--------------------------------------|------------------------------------------|
+| 0-1                      | 2 bytes | Battery voltage.                     | unsigned int16 fractional (scaling 1/10) |
+| 2-3                      | 2 bytes | Battery current.                     | signed int16 fractional (scaling 1/10)   |
+| 4-5                      | 2 bytes | Battery temperature.                 | unsigned int16 fractional (scaling 1/10) |
+| 6-7                      | 2 bytes | Battery state of charge.             | unsigned int16                           |
+| 8-9                      | 2 bytes | Battery state of health.             | unsigned int16                           |
+| 10-11                    | 2 bytes | Battery state (see note).            | unsigned int16                           |
+| 12-13                    | 2 bytes | Battery maximal charging current.    | unsigned int16 fractional (scaling 1/10) |
+| 14-15                    | 2 bytes | Battery maximal discharging current. | unsigned int16 fractional (scaling 1/10) |
 
 Battery states:
-- 0x0011: charging
-- 0x0022: discharging
-- 0x0033: stand-by
+- `0x0011`: charging
+- `0x0022`: discharging
+- `0x0033`: stand-by
 
-### **`0x0b00`: Grid, PV and backup information**
-**Request:** `fe 55 64 14 0b 00 00 df ae`
+### `0x0b00`: Grid, PV and backup information
+**Request example:** `fe 55 64 14 0b 00 00 df ae`
 
-**Response:**
-| Address | Meaning | Data type |
-| ------- | ------- | --------- |
-| 0x07 | PV1 voltage. | uint16_t fractional |
-| 0x09 | PV1 current. | uint16_t fractional |
-| 0x0B | PV1 power. | uint16_t |
-| 0x0D | PV2 voltage. | uint16_t fractional |
-| 0x0F | PV2 current. | uint16_t fractional |
-| 0x11 | PV2 power. | uint16_t |
-| 0x19 | AB line voltage | uint16_t fractional |
-| 0x1B | A phase current. | uint16_t fractional |
-| 0x21 | A phase voltage. | uint16_t fractional |
-| 0x23 | BC line voltage. | uint16_t fractional |
-| 0x25 | B phase current. | uint16_t fractional |
-| 0x27 | B phase voltage. | uint16_t fractional |
-| 0x2B | C phase voltage. | uint16_t fractional |
-| 0x2D | CA line voltage. | uint16_t fractional |
-| 0x2F | C phase current. | uint16_t fractional |
-| 0x31 | Grid (mains) frequency. | uint16_t fractional (scaling 1/100) |
-| 0x35 | Grid active power. | int16_t |
-| 0x37 | Grid reactive power. | int16_t |
-| 0x39 | Grid apparent power. | int16_t |
-| 0x61 | Backup Phase A voltage. | uint16_t fractional |
-| 0x63 | Backup Phase B voltage. | uint16_t fractional |
-| 0x65 | Backup Phase C voltage. | uint16_t fractional |
-| 0x67 | Backup frequency. | uint16_t fractional (scaling 1/100) |
-| 0x69 | Backup Phase A current. | uint16_t fractional |
-| 0x6B | Backup Phase B current. | uint16_t fractional |
-| 0x6D | Backup Phase C current. | uint16_t fractional |
-| 0x71 | Backup active power. | int16_t |
-| 0x73 | Backup reactive power. | int16_t |
-| 0x75 | Backup apparent power. | int16_t |
+**Request message:** `0x00`
+
+**Response message :**
+
+| Address in message block | Length   | Meaning                 | Data type                                 |
+|--------------------------|----------|-------------------------|-------------------------------------------|
+| 0-1                      | 2 bytes  | PV1 voltage.            | unsigned int16 fractional (scaling 1/10)  |
+| 2-3                      | 2 bytes  | PV1 current.            | unsigned int16 fractional (scaling 1/10)  |
+| 4-5                      | 2 bytes  | PV1 power.              | unsigned int16                            |
+| 6-7                      | 2 bytes  | PV2 voltage.            | unsigned int16 fractional (scaling 1/10)  |
+| 8-9                      | 2 bytes  | PV2 current.            | unsigned int16 fractional (scaling 1/10)  |
+| 10-11                    | 2 bytes  | PV2 power.              | unsigned int16                            |
+| 10-11                    | 2 bytes  | PV2 power.              | unsigned int16                            |
+| 12-17                    | 6 bytes  | ??                      | ??                                        |
+| 18-19                    | 2 bytes  | AB line voltage         | unsigned int16 fractional (scaling 1/10)  |
+| 20-21                    | 2 bytes  | A phase current.        | unsigned int16 fractional (scaling 1/10)  |
+| 22-25                    | 4 bytes  | ??                      | ??                                        |
+| 26-27                    | 2 bytes  | A phase voltage.        | unsigned int16 fractional (scaling 1/10)  |
+| 28-29                    | 2 bytes  | BC line voltage.        | unsigned int16 fractional (scaling 1/10)  |
+| 30-31                    | 2 bytes  | B phase current.        | unsigned int16 fractional (scaling 1/10)  |
+| 32-33                    | 2 bytes  | B phase voltage.        | unsigned int16 fractional (scaling 1/10)  |
+| 34-35                    | 2 bytes  | ??                      | ??                                        |
+| 36-37                    | 2 bytes  | C phase voltage.        | unsigned int16 fractional (scaling 1/10)  |
+| 38-39                    | 2 bytes  | CA line voltage.        | unsigned int16 fractional (scaling 1/10)  |
+| 40-41                    | 2 bytes  | C phase current.        | unsigned int16 fractional (scaling 1/10)  |
+| 42-43                    | 2 bytes  | Grid (mains) frequency. | unsigned int16 fractional (scaling 1/100) |
+| 44-45                    | 2 bytes  | ??                      | ??                                        |
+| 46-47                    | 2 bytes  | Grid active power.      | signed int16                              |
+| 48-49                    | 2 bytes  | Grid reactive power.    | signed int16                              |
+| 50-51                    | 2 bytes  | Grid apparent power.    | signed int16                              |
+| 52-89                    | 38 bytes | ??                      | ??                                        |
+| 90-91                    | 2 bytes  | Backup Phase A voltage. | unsigned int16 fractional (scaling 1/10)  |
+| 92-93                    | 2 bytes  | Backup Phase B voltage. | unsigned int16 fractional (scaling 1/10)  |
+| 94-95                    | 2 bytes  | Backup Phase C voltage. | unsigned int16 fractional (scaling 1/10)  |
+| 96-97                    | 2 bytes  | Backup frequency.       | unsigned int16 fractional (scaling 1/100) |
+| 98-99                    | 2 bytes  | Backup Phase A current. | unsigned int16 fractional (scaling 1/10)  |
+| 100-101                  | 2 bytes  | Backup Phase B current. | unsigned int16 fractional (scaling 1/10)  |
+| 102-103                  | 2 bytes  | Backup Phase C current. | unsigned int16 fractional (scaling 1/10)  |
+| 104-105                  | 2 bytes  | ??                      | ??                                        |
+| 106-107                  | 2 bytes  | Backup active power.    | signed int16                              |
+| 108-109                  | 2 bytes  | Backup reactive power.  | signed int16                              |
+| 110-111                  | 2 bytes  | Backup apparent power.  | signed int16                              |
 
 ### **`0x0d00`: Get load information**
 **Request:** `fe 55 64 14 0d 00 00 d9 ae`
