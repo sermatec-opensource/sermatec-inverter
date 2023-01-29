@@ -115,7 +115,7 @@ Battery states:
 
 **Request message:** `0x00`
 
-**Response message :**
+**Response message:**
 
 | Address in message block | Length   | Meaning                   | Data type                                 |
 |--------------------------|----------|---------------------------|-------------------------------------------|
@@ -161,50 +161,60 @@ Battery states:
 | 108-109                  | 2 bytes  | Load reactive power.      | signed int16                              |
 | 110-111                  | 2 bytes  | Load apparent power.      | signed int16                              |
 
-### **`0x0d00`: Get load information**
-**Request:** `fe 55 64 14 0d 00 00 d9 ae`
+### `0x0d00`: Get load information
+**Request example:** `fe 55 64 14 0d 00 00 d9 ae`
 
-**Response:**
-| Address | Meaning | Data type |
-| ------- | ------- | --------- |
-| 0x0B | Current load (power consumption). | uint16_t |
+**Request Message:** `0x00`
 
-### **`0x9500`: Get working parameters**
-**Request:** `fe 55 64 14 95 00 00 41 ae`
+**Response Message:**
 
-**Response:**
-| Address | Meaning | Data type |
-| ------- | ------- | --------- |
-| 0x0F | Upper limit of on-grid power. | uint16_t |
-| 0x13 | Working mode. | uint16_t (see note) |
-| 0x1D | Lower limit of on-grid SOC. | uint16_t |
+| Address in message block | Length  | Meaning                           | Data type    |
+|--------------------------|---------|-----------------------------------|--------------|
+| 3-4                      | 2 bytes | Current load (power consumption). | signed int16 |
+
+### `0x9500`: Get working parameters
+**Request Example:** `fe 55 64 14 95 00 00 41 ae`
+
+**Request Message:** `0x00`
+
+**Response Message:**
+
+| Address in message block | Length  | Meaning                       | Data type               |
+|--------------------------|---------|-------------------------------|-------------------------|
+| 0-7                      | 6 bytes | ??                            | ??                      |
+| 8-9                      | 2 bytes | Upper limit of on-grid power. | signed int16            |
+| 10-11                    | 2 bytes | ??                            | ??                      |
+| 12-13                    | 2 bytes | Working mode.                 | signed int16 (see note) |
+| 14-21                    | 8 bytes | ??                            | ??                      |
+| 22-23                    | 2 bytes | Lower limit of on-grid SOC.   | signed int16            |
 
 Working modes:
-- 0x0001: General Mode
-- 0x0002: Energy Storage Mode
+- `0x0001`: General Mode
+- `0x0002`: Energy Storage Mode
 - code for another three modes is unknown (unable to test)
 
-### **`0x6600`: Set working parameters**
+### `0x6600`: Set working parameters
 **Request:**
-| Address | Meaning | Content |
-| ------- | ------- | --------- |
-| 0x00 | Header. | `0xfe 0x55 0x64 0x14` |
-| 0x04 | Command. | `0x66 0x00` |
-| 0x06 | Size. | `0x20` |
-| 0x07-0x0E | Zeroes. | `00...` |
-| 0x0F | Upper limit of on-grid power. | value as uint16_t |
-| 0x11-0x12 | Zeroes. | `00...` |
-| 0x13 | Working mode. See note at `0x9500`. | value as uint16_t |
-| 0x15-0x18 | Zeroes. | `00...` |
-| 0x19 | Unknown. | `0x00ee` |
-| 0x1B-0x1C | Zeroes. | `00...` |
-| 0x1D | Lower limit of on-grid SOC. | value as uint16_t |
-| 0x1F | Unknown. | `0x0001` |
-| 0x21 | Unknown. | `0x0000` |
-| 0x23 | Unknown. | `0x059F` |
-| 0x25 | Unknown. | `0x0003` |
-| 0x27 | Checksum. | ? |
-| 0x28 | Footer. | `0xAE` |
+
+| Address   | Meaning                             | Content               |
+|-----------|-------------------------------------|-----------------------|
+| 0x00      | Header.                             | `0xfe 0x55 0x64 0x14` |
+| 0x04      | Command.                            | `0x66 0x00`           |
+| 0x06      | Size.                               | `0x20`                |
+| 0x07-0x0E | Zeroes.                             | `00...`               |
+| 0x0F      | Upper limit of on-grid power.       | value as uint16_t     |
+| 0x11-0x12 | Zeroes.                             | `00...`               |
+| 0x13      | Working mode. See note at `0x9500`. | value as uint16_t     |
+| 0x15-0x18 | Zeroes.                             | `00...`               |
+| 0x19      | Unknown.                            | `0x00ee`              |
+| 0x1B-0x1C | Zeroes.                             | `00...`               |
+| 0x1D      | Lower limit of on-grid SOC.         | value as uint16_t     |
+| 0x1F      | Unknown.                            | `0x0001`              |
+| 0x21      | Unknown.                            | `0x0000`              |
+| 0x23      | Unknown.                            | `0x059F`              |
+| 0x25      | Unknown.                            | `0x0003`              |
+| 0x27      | Checksum.                           | ?                     |
+| 0x28      | Footer.                             | `0xAE`                |
 
 **Response:** none
 
@@ -222,4 +232,10 @@ for every byte in data:
     checksum = checksum ⊻ byte
 ```
 
-Example: let's calculate a checksum for the battery information request. The header stays the same, the command is 0x0a followed by 0x00 and the message length is 0. The message looks like this: `fe 55 64 14 0a 00 00`. Checksum will be calculated using the formula above: 0f ⊻ fe ⊻ 55 ⊻ 64 ⊻ 14 ⊻ 0a ⊻ 00 ⊻ 00 = de. We will attach the checksum and the header to the message and we are finished: `fe 55 64 14 0a 00 00 de ae`.
+**Example:**
+
+Let's calculate a checksum for the battery information request.
+The header stays the same, the command is 0x0a followed by `0x00` and the message length is 0.
+The message looks like this: `fe 55 64 14 0a 00 00`.
+Checksum will be calculated using the formula above: `0f` ⊻ `fe` ⊻ `55` ⊻ `64` ⊻ `14` ⊻ `0a` ⊻ `00` ⊻ `00` = `de`.
+We will attach the checksum and the header to the message, and we are finished: `fe 55 64 14 0a 00 00 de ae`.
