@@ -117,43 +117,49 @@ Battery states:
 
 **Response message :**
 
-| Address in message block | Length   | Meaning                 | Data type                                 |
-|--------------------------|----------|-------------------------|-------------------------------------------|
-| 0-1                      | 2 bytes  | PV1 voltage.            | unsigned int16 fractional (scaling 1/10)  |
-| 2-3                      | 2 bytes  | PV1 current.            | unsigned int16 fractional (scaling 1/10)  |
-| 4-5                      | 2 bytes  | PV1 power.              | unsigned int16                            |
-| 6-7                      | 2 bytes  | PV2 voltage.            | unsigned int16 fractional (scaling 1/10)  |
-| 8-9                      | 2 bytes  | PV2 current.            | unsigned int16 fractional (scaling 1/10)  |
-| 10-11                    | 2 bytes  | PV2 power.              | unsigned int16                            |
-| 12-17                    | 6 bytes  | ??                      | ??                                        |
-| 18-19                    | 2 bytes  | AB line voltage         | unsigned int16 fractional (scaling 1/10)  |
-| 20-21                    | 2 bytes  | A phase current.        | unsigned int16 fractional (scaling 1/10)  |
-| 22-25                    | 4 bytes  | ??                      | ??                                        |
-| 26-27                    | 2 bytes  | A phase voltage.        | unsigned int16 fractional (scaling 1/10)  |
-| 28-29                    | 2 bytes  | BC line voltage.        | unsigned int16 fractional (scaling 1/10)  |
-| 30-31                    | 2 bytes  | B phase current.        | unsigned int16 fractional (scaling 1/10)  |
-| 32-33                    | 2 bytes  | B phase voltage.        | unsigned int16 fractional (scaling 1/10)  |
-| 34-35                    | 2 bytes  | ??                      | ??                                        |
-| 36-37                    | 2 bytes  | C phase voltage.        | unsigned int16 fractional (scaling 1/10)  |
-| 38-39                    | 2 bytes  | CA line voltage.        | unsigned int16 fractional (scaling 1/10)  |
-| 40-41                    | 2 bytes  | C phase current.        | unsigned int16 fractional (scaling 1/10)  |
-| 42-43                    | 2 bytes  | Grid (mains) frequency. | unsigned int16 fractional (scaling 1/100) |
-| 44-45                    | 2 bytes  | ??                      | ??                                        |
-| 46-47                    | 2 bytes  | Grid active power.      | signed int16                              |
-| 48-49                    | 2 bytes  | Grid reactive power.    | signed int16                              |
-| 50-51                    | 2 bytes  | Grid apparent power.    | signed int16                              |
-| 52-89                    | 38 bytes | ??                      | ??                                        |
-| 90-91                    | 2 bytes  | Backup Phase A voltage. | unsigned int16 fractional (scaling 1/10)  |
-| 92-93                    | 2 bytes  | Backup Phase B voltage. | unsigned int16 fractional (scaling 1/10)  |
-| 94-95                    | 2 bytes  | Backup Phase C voltage. | unsigned int16 fractional (scaling 1/10)  |
-| 96-97                    | 2 bytes  | Backup frequency.       | unsigned int16 fractional (scaling 1/100) |
-| 98-99                    | 2 bytes  | Backup Phase A current. | unsigned int16 fractional (scaling 1/10)  |
-| 100-101                  | 2 bytes  | Backup Phase B current. | unsigned int16 fractional (scaling 1/10)  |
-| 102-103                  | 2 bytes  | Backup Phase C current. | unsigned int16 fractional (scaling 1/10)  |
-| 104-105                  | 2 bytes  | ??                      | ??                                        |
-| 106-107                  | 2 bytes  | Backup active power.    | signed int16                              |
-| 108-109                  | 2 bytes  | Backup reactive power.  | signed int16                              |
-| 110-111                  | 2 bytes  | Backup apparent power.  | signed int16                              |
+| Address in message block | Length   | Meaning                   | Data type                                 |
+|--------------------------|----------|---------------------------|-------------------------------------------|
+| 0-1                      | 2 bytes  | PV1 voltage.              | unsigned int16 fractional (scaling 1/10)  |
+| 2-3                      | 2 bytes  | PV1 current.              | unsigned int16 fractional (scaling 1/10)  |
+| 4-5                      | 2 bytes  | PV1 power.                | unsigned int16                            |
+| 6-7                      | 2 bytes  | PV2 voltage.              | unsigned int16 fractional (scaling 1/10)  |
+| 8-9                      | 2 bytes  | PV2 current.              | unsigned int16 fractional (scaling 1/10)  |
+| 10-11                    | 2 bytes  | PV2 power.                | unsigned int16                            |
+| 12-13                    | 2 bytes  | Inverter Phase A voltage. | unsigned int16 fractional (scaling 1/10)  |
+| 14-15                    | 2 bytes  | Inverter Phase A current. | signed int16 fractional (scaling 1/10)    |
+| 16-17                    | 2 bytes  | Grid Phase A voltage.     | unsigned int16 fractional (scaling 1/10)  |
+| 18-19                    | 2 bytes  | Grid Line AB voltage.     | unsigned int16 fractional (scaling 1/10)  |
+| 20-21                    | 2 bytes  | Grid phase A current.     | signed int16 fractional (scaling 1/10)    |
+| 22-23                    | 2 bytes  | Inverter Phase B voltage. | unsigned int16 fractional (scaling 1/10)  |
+| 24-25                    | 2 bytes  | Inverter Phase B current. | signed int16 fractional (scaling 1/10)    |
+| 26-27                    | 2 bytes  | Grid Phase B voltage.     | unsigned int16 fractional (scaling 1/10)  |
+| 28-29                    | 2 bytes  | Grid line BC voltage.     | unsigned int16 fractional (scaling 1/10)  |
+| 30-31                    | 2 bytes  | Grid Phase B current.     | signed int16 fractional (scaling 1/10)    |
+| 32-23                    | 2 bytes  | Inverter Phase C voltage. | unsigned int16 fractional (scaling 1/10)  |
+| 34-35                    | 2 bytes  | Inverter Phase C current. | signed int16 fractional (scaling 1/10)    |
+| 36-37                    | 2 bytes  | Grid Phase C voltage.     | unsigned int16 fractional (scaling 1/10)  |
+| 38-39                    | 2 bytes  | Grid line CA voltage.     | unsigned int16 fractional (scaling 1/10)  |
+| 40-41                    | 2 bytes  | Grid Phase C current.     | signed int16 fractional (scaling 1/10)    |
+| 42-43                    | 2 bytes  | Grid (mains) frequency.   | unsigned int16 fractional (scaling 1/100) |
+| 44-45                    | 2 bytes  | Power Factor              | signed int16 fractional (scaling 1/1000)  |
+| 46-47                    | 2 bytes  | Grid active power.        | signed int16                              |
+| 48-49                    | 2 bytes  | Grid reactive power.      | signed int16                              |
+| 50-51                    | 2 bytes  | Grid apparent power.      | signed int16                              |
+| 52-69                    | 16 bytes | ??                        | ??                                        |
+ | 70-71                    | 2 bytes  | Device Type Code          | unsigned int16                            |
+ | 72-73                    | 2 bytes  | DSP Version High          | unsigned int16                            |
+ | 74-75                    | 2 bytes  | DSP Version Low           | unsigned int16                            |
+| 90-91                    | 2 bytes  | Load Phase A voltage.     | unsigned int16 fractional (scaling 1/10)  |
+| 92-93                    | 2 bytes  | Load Phase B voltage.     | unsigned int16 fractional (scaling 1/10)  |
+| 94-95                    | 2 bytes  | Load Phase C voltage.     | unsigned int16 fractional (scaling 1/10)  |
+| 96-97                    | 2 bytes  | Load frequency.           | unsigned int16 fractional (scaling 1/100) |
+| 98-99                    | 2 bytes  | Load Phase A current.     | signed int16 fractional (scaling 1/10)    |
+| 100-101                  | 2 bytes  | Load Phase B current.     | signed int16 fractional (scaling 1/10)    |
+| 102-103                  | 2 bytes  | Load Phase C current.     | signed int16 fractional (scaling 1/10)    |
+| 104-105                  | 2 bytes  | Load Power Factor         | signed int16 fractional (scaling 1/1000)  |
+| 106-107                  | 2 bytes  | Load active power.        | signed int16                              |
+| 108-109                  | 2 bytes  | Load reactive power.      | signed int16                              |
+| 110-111                  | 2 bytes  | Load apparent power.      | signed int16                              |
 
 ### **`0x0d00`: Get load information**
 **Request:** `fe 55 64 14 0d 00 00 d9 ae`
