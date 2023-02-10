@@ -47,19 +47,6 @@ class SermatecProtocolParser:
         else:
             return 0
 
-    def __parseReplyField(self, fieldData : bytes, fieldType : str, fieldMultiplier : float) -> int | str | float:
-
-        if fieldType == "int":
-            return round(int.from_bytes(fieldData, byteorder = "big", signed = True) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
-        elif fieldType == "uInt":
-            return round(int.from_bytes(fieldData, byteorder = "big", signed = False) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
-        elif fieldType == "string":
-            # The string is null-terminated, trimming everything after first occurence of '\0'.
-            trimmedString = fieldData.split(b"\x00", 1)[0]
-            return trimmedString.decode('ascii')
-        else:
-            raise TypeError(f"The provided field is of an unsuported type '{fieldType}'")
-
     # Parse a command reply using a specified version definition.
     # Command can be probably extracted from the reply, but here we check the integrity.
     def parseReply(self, command : int, version : int, reply : bytes) -> dict:
@@ -77,16 +64,41 @@ class SermatecProtocolParser:
         parsedData : dict = {}
         replyPosition = self.REPLY_OFFSET_DATA
 
-        for field in cmdFields:
-            try:
-                fieldName   = field["name"]
-                fieldLength = int(field["byteLen"])
-                fieldType   = field["type"]
-            except KeyError:
-                raise KeyError(f"Field in command 0x{command : hex} is malformed: {field}")
+        for idx, field in enumerate(cmdFields):
 
+            self.logger.debug(f"== Field #{idx} (reply byte #{replyPosition})")
+
+            if not (("name" or "byteLen" or "type") in field):
+                raise KeyError(f"Field has a 'name', 'byteLen' or 'type' missing: {field}.")
+
+            fieldLength = int(field["byteLen"])
             if fieldLength < 1:
                 raise ValueError("Field length is zero or negative.")
+
+            if ("same" in field and field["same"]) or idx == 0:
+                self.logger.debug(f"Staying at the same byte.")
+            else:
+                replyPosition += fieldLength
+
+            fieldType = field["type"]
+            if fieldType == "bit":
+                if "bitPosition" in field:
+                    fieldBitPosition = field["bitPosition"]
+                else:
+                    raise KeyError("Field is of a type 'bit', but is missing key 'bitPosition'.")
+
+            if fieldType == "bitRange":
+                if "fromBit" and "endBit":
+                    fieldFromBit = field["fromBit"]
+                    fieldEndBit = field["endBit"]
+                else:
+                    raise KeyError("Field is of a type 'bitRange' but is missing key 'fromBit' or 'endBit'.")
+
+
+            fieldName = field["name"]
+            fieldTag = re.sub(r"[^A-Za-z0-9]", "_", field["name"]).lower()
+            self.logger.debug(f"Created tag from name: {fieldTag}")
+
 
             if "unitValue" in field:
                 try:
@@ -95,15 +107,29 @@ class SermatecProtocolParser:
                     raise SyntaxError("Can't convert field's unitValue to float.")
             else:
                 fieldMultiplier : float = 1
-                self.logger.debug(f"Field {fieldName} has not 'unitValue' key, using 1 as a default multiplier.")
-
-            fieldTag = re.sub(r"[^A-Za-z0-9]", "_", field["name"]).lower()
-            self.logger.debug(f"Created tag from name: {fieldTag}")
+                self.logger.debug(f"Field {fieldName} has not 'unitValue' key, using 1 as a default multiplier.")          
             
-            self.logger.debug(f"Parsing field data: {reply[ replyPosition : (replyPosition + fieldLength) ].hex(' ')}")
-            parsedData[fieldTag] = self.__parseReplyField(reply[ replyPosition : (replyPosition + fieldLength) ], fieldType, fieldMultiplier)
+            currentFieldData = reply[ replyPosition : (replyPosition + fieldLength) ]
+            self.logger.debug(f"Parsing field data: {currentFieldData.hex(' ')}")
 
-            replyPosition += fieldLength
+            if fieldType == "int":
+                parsedData[fieldTag] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = True) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
+            elif fieldType == "uInt":
+                parsedData[fieldTag] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = False) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
+            elif fieldType == "string":
+                # The string is null-terminated, trimming everything after first occurence of '\0'.
+                trimmedString = currentFieldData.split(b"\x00", 1)[0]
+                parsedData[fieldTag] = trimmedString.decode('ascii')
+            elif fieldType == "bit":
+                binString : str = bin(int.from_bytes(currentFieldData, byteorder = "little", signed = False)).removeprefix("0b")
+                parsedData[fieldTag] = int(binString[fieldBitPosition])
+            elif fieldType == "bitRange":
+                binString : str = bin(int.from_bytes(currentFieldData, byteorder = "little", signed = False)).removeprefix("0b")
+                parsedData[fieldTag] = binString[fieldFromBit:fieldEndBit]
+            else:
+                raise TypeError(f"The provided field is of an unsuported type '{fieldType}'")
+
+            self.logger.debug(f"Parsed: {parsedData[fieldTag]}")
         
         return parsedData
     
@@ -137,7 +163,9 @@ if __name__ == "__main__":
     c0a = binfile0a.read()
     binfile0b = open("../../dumps/0b", "rb")
     c0b = binfile0b.read()
+    binfile0c = open("../../dumps/0c_ongrid", "rb")
+    c0c = binfile0c.read()
     binfile0d = open("../../dumps/0d", "rb")
     c0d = binfile0d.read()
 
-    print(smc.parseReply(0x98, 400, c98))
+    print(smc.parseReply(0x0c, 400, c0c))
