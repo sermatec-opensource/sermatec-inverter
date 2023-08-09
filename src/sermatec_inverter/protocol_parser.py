@@ -26,9 +26,7 @@ class SermatecProtocolParser:
     }
 
 
-    def __init__(self, logger : logging.Logger, path : str):
-        self.logger = logger
-
+    def __init__(self, path : str):
         with open(path, "r") as protocolFile:
             protocolData = json.load(protocolFile)
             try:
@@ -76,7 +74,7 @@ class SermatecProtocolParser:
     # Command can be probably extracted from the reply, but here we check the integrity.
     def parseReply(self, command : int, version : int, reply : bytes) -> dict:
         cmd : dict = self.__getCommandByVersion(command, version)
-        self.logger.debug(f"Reply to parse: {reply[self.REPLY_OFFSET_DATA:].hex(' ')}")
+        logger.debug(f"Reply to parse: {reply[self.REPLY_OFFSET_DATA:].hex(' ')}")
 
         try:
             cmdType     : dict = cmd["type"]
@@ -84,14 +82,14 @@ class SermatecProtocolParser:
             cmdFields   : dict = cmd["fields"]
         except KeyError:
             raise KeyError(f"Protocol file malformed, can't process command 0x{command : hex}")
-        self.logger.debug(f"It is command 0x{cmdType}: {cmdName} with {len(cmdFields)} fields")
+        logger.debug(f"It is command 0x{cmdType}: {cmdName} with {len(cmdFields)} fields")
 
         parsedData : dict = {}
         replyPosition = self.REPLY_OFFSET_DATA
 
         for idx, field in enumerate(cmdFields):
 
-            self.logger.debug(f"== Field #{idx} (reply byte #{replyPosition})")
+            logger.debug(f"== Field #{idx} (reply byte #{replyPosition})")
 
             if not (("name" or "byteLen" or "type") in field):
                 raise KeyError(f"Field has a 'name', 'byteLen' or 'type' missing: {field}.")
@@ -101,7 +99,7 @@ class SermatecProtocolParser:
                 raise ValueError("Field length is zero or negative.")
 
             if ("same" in field and field["same"]) or idx == 0:
-                self.logger.debug(f"Staying at the same byte.")
+                logger.debug(f"Staying at the same byte.")
             else:
                 replyPosition += fieldLength
 
@@ -122,7 +120,7 @@ class SermatecProtocolParser:
 
             fieldName = field["name"]
             fieldTag = re.sub(r"[^A-Za-z0-9]", "_", field["name"]).lower()
-            self.logger.debug(f"Created tag from name: {fieldTag}")
+            logger.debug(f"Created tag from name: {fieldTag}")
 
 
             if "unitValue" in field:
@@ -132,10 +130,10 @@ class SermatecProtocolParser:
                     raise SyntaxError("Can't convert field's unitValue to float.")
             else:
                 fieldMultiplier : float = 1
-                self.logger.debug(f"Field {fieldName} has not 'unitValue' key, using 1 as a default multiplier.")          
+                logger.debug(f"Field {fieldName} has not 'unitValue' key, using 1 as a default multiplier.")          
             
             currentFieldData = reply[ replyPosition : (replyPosition + fieldLength) ]
-            self.logger.debug(f"Parsing field data: {currentFieldData.hex(' ')}")
+            logger.debug(f"Parsing field data: {currentFieldData.hex(' ')}")
 
             if fieldType == "int":
                 parsedData[fieldTag] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = True) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
@@ -154,7 +152,7 @@ class SermatecProtocolParser:
             else:
                 raise TypeError(f"The provided field is of an unsuported type '{fieldType}'")
 
-            self.logger.debug(f"Parsed: {parsedData[fieldTag]}")
+            logger.debug(f"Parsed: {parsedData[fieldTag]}")
         
         return parsedData
     
@@ -164,7 +162,7 @@ class SermatecProtocolParser:
         for byte in data:
             checksum = (checksum & 0xff) ^ byte
         
-        self.logger.debug(f"Calculated checksum: {hex(checksum)}")
+        logger.debug(f"Calculated checksum: {hex(checksum)}")
 
         return checksum.to_bytes(1)
 
@@ -174,30 +172,30 @@ class SermatecProtocolParser:
 
         # Signature check.
         if response[0x00:0x02] != self.REQ_SIGNATURE:
-            logging.debug("Bad response signature.")
+            logger.debug("Bad response signature.")
             return False
         # Sender + receiver check.
         if response[0x02:0x03] != self.REQ_INVERTER_ADDRESS:
-            logging.debug("Bad response sender address.")
+            logger.debug("Bad response sender address.")
             return False
         if response[0x03:0x04] != self.REQ_APP_ADDRESS:
-            logging.debug("Bad response recipient address.")
+            logger.debug("Bad response recipient address.")
             return False
         # Response command check.
         if response[0x04:0x05] != expectedCommandByte:
-            logging.debug("Bad response expected command.")
+            logger.debug("Bad response expected command.")
             return False
         # Zero.
         if response[0x05] != 0:
-            logging.debug("No zero at response position 0x00.")
+            logger.debug("No zero at response position 0x00.")
             return False
         # Checksum verification.
         if response[-0x02:-0x01] != self.__calculateChecksum(response[:len(response) - 2]):
-            logging.debug(f"Bad response checksum: {response[-0x03:-0x02].hex()}")
+            logger.debug(f"Bad response checksum: {response[-0x03:-0x02].hex()}")
             return False
         # Footer check.
         if response[-0x01] != int.from_bytes(self.REQ_FOOTER):
-            logging.debug("Bad response footer.")
+            logger.debug("Bad response footer.")
             return False
 
         return True
@@ -207,14 +205,14 @@ class SermatecProtocolParser:
         request += self.__calculateChecksum(request)
         request += self.REQ_FOOTER
 
-        self.logger.debug(f"Built command: {[hex(x) for x in request]}")
+        logger.debug(f"Built command: {[hex(x) for x in request]}")
 
         return request
             
 
 if __name__ == "__main__":
-    logging.basicConfig(level = "DEBUG")
-    smc : SermatecProtocolParser = SermatecProtocolParser(logging, "protocol-en.json")
+    logger.basicConfig(level = "DEBUG")
+    smc : SermatecProtocolParser = SermatecProtocolParser("protocol-en.json")
     #print(smc.getQueryCommands(0))
     binfile98 = open("../../dumps/98", "rb")
     c98 = binfile98.read()
