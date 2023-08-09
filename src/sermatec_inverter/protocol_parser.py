@@ -3,9 +3,28 @@ import json
 import re
 import math
 
+# Local module logger.
+logger = logging.getLogger(__name__)
+
 class SermatecProtocolParser:
 
     REPLY_OFFSET_DATA = 7
+    
+    REQ_SIGNATURE           = bytes([0xfe, 0x55])
+    REQ_APP_ADDRESS         = bytes([0x64])
+    REQ_INVERTER_ADDRESS    = bytes([0x14])
+    REQ_FOOTER              = bytes([0xae])
+
+    COMMAND_SHORT_NAMES : dict = {
+        "systemInformation"   : 0x98,
+        "batteryStatus"       : 0x0a,
+        "gridPVStatus"        : 0x0b,
+        "runningStatus"       : 0x0c,
+        "workingParameters"   : 0x95,
+        "load"                : 0x0d, # Same as bmsStatus, keeping for backwards compatibility.
+        "bmsStatus"           : 0x0d
+    }
+
 
     def __init__(self, logger : logging.Logger, path : str):
         self.logger = logger
@@ -17,6 +36,12 @@ class SermatecProtocolParser:
             except KeyError:
                 raise KeyError("Protocol file malformed, 'osim' key not found.")
             
+    def getCommandCodeFromName(self, commandName : str) -> int:
+        if commandName in self.COMMAND_SHORT_NAMES:
+            return self.COMMAND_SHORT_NAMES[commandName]
+        else:
+            raise KeyError(f"Specified command '{commandName}' not found.")
+
     # Get all available query commands in the specified version.
     def getQueryCommands(self, version : int) -> list:
         cmds = set()
@@ -143,7 +168,41 @@ class SermatecProtocolParser:
 
         return checksum.to_bytes(1)
 
-    def generateRequest(self, command : int, version : int, reply : bytes) ->bytes:  
+    def checkResponseIntegrity(self, response : bytes, expectedCommandByte : int) -> bool:
+        # Length check.
+        if len(response) < 8: return False
+
+        # Signature check.
+        if response[0x00:0x02] != self.REQ_SIGNATURE:
+            logging.debug("Bad response signature.")
+            return False
+        # Sender + receiver check.
+        if response[0x02:0x03] != self.REQ_INVERTER_ADDRESS:
+            logging.debug("Bad response sender address.")
+            return False
+        if response[0x03:0x04] != self.REQ_APP_ADDRESS:
+            logging.debug("Bad response recipient address.")
+            return False
+        # Response command check.
+        if response[0x04:0x05] != expectedCommandByte:
+            logging.debug("Bad response expected command.")
+            return False
+        # Zero.
+        if response[0x05] != 0:
+            logging.debug("No zero at response position 0x00.")
+            return False
+        # Checksum verification.
+        if response[-0x02:-0x01] != self.__calculateChecksum(response[:len(response) - 2]):
+            logging.debug(f"Bad response checksum: {response[-0x03:-0x02].hex()}")
+            return False
+        # Footer check.
+        if response[-0x01] != int.from_bytes(self.REQ_FOOTER):
+            logging.debug("Bad response footer.")
+            return False
+
+        return True
+
+    def generateRequest(self, command : int) ->bytes:  
         request : bytearray = bytearray([*self.REQ_SIGNATURE, *self.REQ_APP_ADDRESS, *self.REQ_INVERTER_ADDRESS, command, 0x00, 0x00])
         request += self.__calculateChecksum(request)
         request += self.REQ_FOOTER
@@ -168,4 +227,5 @@ if __name__ == "__main__":
     binfile0d = open("../../dumps/0d", "rb")
     c0d = binfile0d.read()
 
-    print(smc.parseReply(0x0c, 400, c0c))
+    print(smc.parseReply(0x0d, 400, c0d))
+    # print(smc.parseReply(0x0c, 400, c0c))
