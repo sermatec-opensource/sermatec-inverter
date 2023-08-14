@@ -86,8 +86,13 @@ class SermatecProtocolParser:
 
         parsedData : dict = {}
         replyPosition = self.REPLY_OFFSET_DATA
+        prevReplyPosition : int = 0
 
         for idx, field in enumerate(cmdFields):
+
+            if ("same" in field and field["same"]):
+                logger.debug(f"Staying at the same byte.")
+                replyPosition = prevReplyPosition
 
             logger.debug(f"== Field #{idx} (reply byte #{replyPosition})")
 
@@ -97,11 +102,6 @@ class SermatecProtocolParser:
             fieldLength = int(field["byteLen"])
             if fieldLength < 1:
                 raise ValueError("Field length is zero or negative.")
-
-            if ("same" in field and field["same"]) or idx == 0:
-                logger.debug(f"Staying at the same byte.")
-            else:
-                replyPosition += fieldLength
 
             fieldType = field["type"]
             if fieldType == "bit":
@@ -153,6 +153,9 @@ class SermatecProtocolParser:
                 raise TypeError(f"The provided field is of an unsuported type '{fieldType}'")
 
             logger.debug(f"Parsed: {parsedData[fieldTag]}")
+
+            prevReplyPosition = replyPosition
+            replyPosition += fieldLength
         
         return parsedData
     
@@ -225,5 +228,5 @@ if __name__ == "__main__":
     binfile0d = open("../../dumps/0d", "rb")
     c0d = binfile0d.read()
 
-    print(smc.parseReply(0x0d, 400, c0d))
+    print(smc.parseReply(0x98, 400, c98))
     # print(smc.parseReply(0x0c, 400, c0c))
