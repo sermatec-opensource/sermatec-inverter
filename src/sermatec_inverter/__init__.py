@@ -1,5 +1,8 @@
 import logging
 import asyncio
+from . import protocol_parser
+
+_LOGGER = logging.getLogger(__name__)
 
 class Sermatec:
 
@@ -16,95 +19,44 @@ class Sermatec:
     REQ_INVERTER_ADDRESS    = bytes([0x14])
     REQ_FOOTER              = bytes([0xae])
 
-    def __init__(self, logger : logging.Logger, host : str, port : int = 8899):
+    def __init__(self, host : str, port : int, protocolFilePath : str):
         self.host = host
         self.port = port
         self.connected = False
-        self.logger = logger
+        self.parser = protocol_parser.SermatecProtocolParser(protocolFilePath)
+        self.pcuVersion = 0
 
     def __del__(self):
         pass
     
-    def __checkResponseIntegrity(self, response : bytes, expectedCommandByte : bytes) -> bool:
-        # Length check.
-        if len(response) < 8: return False
-
-        # Signature check.
-        if response[0x00:0x02] != self.REQ_SIGNATURE:
-            logging.debug("Bad response signature.")
-            return False
-        # Sender + receiver check.
-        if response[0x02:0x03] != self.REQ_INVERTER_ADDRESS:
-            logging.debug("Bad response sender address.")
-            return False
-        if response[0x03:0x04] != self.REQ_APP_ADDRESS:
-            logging.debug("Bad response recipient address.")
-            return False
-        # Response command check.
-        if response[0x04:0x05] != expectedCommandByte:
-            logging.debug("Bad response expected command.")
-            return False
-        # Zero.
-        if response[0x05] != 0:
-            logging.debug("No zero at response position 0x00.")
-            return False
-        # Checksum verification.
-        if response[-0x02:-0x01] != self.__calculateChecksum(response[:len(response) - 2]):
-            logging.debug(f"Bad response checksum: {response[-0x03:-0x02].hex()}")
-            return False
-        # Footer check.
-        if response[-0x01] != int.from_bytes(self.REQ_FOOTER):
-            logging.debug("Bad response footer.")
-            return False
-
-        return True
-
-    def __calculateChecksum(self, data : bytes) -> bytes:
-        checksum : int = 0x0f
-        
-        for byte in data:
-            checksum = (checksum & 0xff) ^ byte
-        
-        self.logger.debug(f"Calculated checksum: {hex(checksum)}")
-
-        return checksum.to_bytes(1)
-
-    def __buildCommand(self, commandName : str) -> bytes:
-        if not commandName in self.REQ_COMMANDS:
-            raise KeyError(f"Specified command \"{commandName}\" does not exist.")
-        
-        command : bytearray = bytearray([*self.REQ_SIGNATURE, *self.REQ_APP_ADDRESS, *self.REQ_INVERTER_ADDRESS, *self.REQ_COMMANDS[commandName], 0x00, 0x00])
-        command += self.__calculateChecksum(command)
-        command += self.REQ_FOOTER
-
-        self.logger.debug(f"Built command: {[hex(x) for x in command]}")
-
-        return command
-          
-    async def __sendCommandAndReceiveData(self, commandName : str) -> bytes:
+    async def __sendQuery(self, command : int) -> bytes:
         if self.isConnected():
-            dataToSend = self.__buildCommand(commandName)
+            dataToSend = self.parser.generateRequest(command)
             self.writer.write(dataToSend)
             await self.writer.drain()
 
             data = await self.reader.read(256)
-            self.logger.debug(f"Received data: { data.hex(' ', 1) }")
+            _LOGGER.debug(f"Received data: { data.hex(' ', 1) }")
 
             if len(data) == 0:
-                self.logger.error(f"No data received when issued command {commandName}: connection closed by the inverter.")
+                _LOGGER.error(f"No data received when issued command {command}: connection closed by the inverter.")
                 self.connected = False
-                raise ConnectionAbortedError()
+                raise ValueError("No data received")
             
-            if not self.__checkResponseIntegrity(data, self.REQ_COMMANDS[commandName]):
-                self.logger.error(f"Command {commandName} response data malformed.")
-                raise ValueError()
+            if not self.parser.checkResponseIntegrity(data, command):
+                _LOGGER.error(f"Command {command} response data malformed.")
+                raise ValueError("Response malformed")
 
             return data
-
+                    
         else:
-            self.logger.error("Can't send request: not connected.")
-            raise RuntimeError("Can't send request: not connected.")
-    
+            _LOGGER.error("Can't send request: not connected.")
+            raise RuntimeError("Not connected")
+
+    async def __sendQueryByName(self, commandName : str) -> bytes:
+        command : int = self.parser.getCommandCodeFromName(commandName)
+        return await self.__sendQuery(command)
+
     def __parseBatteryState(self, stateInt : int) -> str:
         if stateInt == 0x0011:
             return "charging"
@@ -123,6 +75,9 @@ class Sermatec:
         else:
             return "unknown"
 
+# ========================================================================
+# Communications
+# ========================================================================
     async def connect(self) -> bool:
         if not self.isConnected():
 
@@ -130,7 +85,7 @@ class Sermatec:
             try:
                 self.reader, self.writer = await asyncio.wait_for(confut, timeout = 3)
             except:
-                self.logger.error("Couldn't connect to the inverter.")
+                _LOGGER.error("Couldn't connect to the inverter.")
                 self.connected = False
                 return False
             else:
@@ -148,8 +103,11 @@ class Sermatec:
             await self.writer.wait_closed()
             self.connected = False
 
+# ========================================================================
+# Query methods
+# ========================================================================
     async def getSerial(self) -> str:
-        data = await self.__sendCommandAndReceiveData("systemInformation")
+        data = await self.__sendQueryByName("systemInformation")
         data = data[0x0D:]
         data = data.split(b"\x00", 1)[0]
         serial = data.decode('ascii')
@@ -157,7 +115,7 @@ class Sermatec:
     
     async def getBatteryInfo(self) -> dict:
         batInfo : dict = {}
-        data = await self.__sendCommandAndReceiveData("batteryStatus")
+        data = await self.__sendQueryByName("batteryStatus")
 
         batInfo["battery_voltage"]      = int.from_bytes(data[0x07:0x09], byteorder = "big", signed = False) / 10.0
         batInfo["battery_current"]      = int.from_bytes(data[0x09:0x0B], byteorder = "big", signed = True) / 10.0
@@ -176,7 +134,7 @@ class Sermatec:
     
     async def getGridPVInfo(self) -> dict:
         gridPVInfo : dict = {}
-        data = await self.__sendCommandAndReceiveData("gridPVStatus")
+        data = await self.__sendQueryByName("gridPVStatus")
         
         gridPVInfo["pv1_voltage"]               = int.from_bytes(data[0x07:0x09], byteorder = "big", signed = False) / 10.0
         gridPVInfo["pv1_current"]               = int.from_bytes(data[0x09:0x0B], byteorder = "big", signed = False) / 10.0
@@ -211,7 +169,7 @@ class Sermatec:
     
     async def getWorkingParameters(self) -> dict:
         workingParams : dict = {}
-        data = await self.__sendCommandAndReceiveData("workingParameters")
+        data = await self.__sendQueryByName("workingParameters")
         
         workingParams["upper_limit_ongrid_power"] = int.from_bytes(data[0x0F:0x11], byteorder = "big", signed = False)
         workingParams["working_mode"] = self.__parseWorkingMode(
@@ -222,8 +180,18 @@ class Sermatec:
         return workingParams
 
     async def getLoad(self) -> int:
-        load : int = None
-        data = await self.__sendCommandAndReceiveData("load")
+        load : int
+        data = await self.__sendQueryByName("load")
         
         load = int.from_bytes(data[0x0B:0x0D], byteorder = "big", signed = False)
         return load
+
+    # async def getPCUVersion(self) -> int:
+
+    async def getCustom(self, command : int) -> dict:
+        data : bytes = await self.__sendQuery(command)
+        parsedData : dict = self.parser.parseReply(command, self.pcuVersion, data)
+        return parsedData
+    
+    async def getCustomRaw(self, command : int) -> bytes:
+        return await self.__sendQuery(command)
