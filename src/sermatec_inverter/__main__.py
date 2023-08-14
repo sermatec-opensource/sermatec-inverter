@@ -2,14 +2,42 @@ import sys
 import argparse
 import logging
 import asyncio
+from pathlib import Path
 from . import Sermatec
 
-async def main(cmds : list, host : str, port : int = None):
+async def customgetFunc(**kwargs):
+    
+    # Parsing command - it can be hex, dec or whathever base integer.
+    try:
+        parsedCmd = int(kwargs["command"], 0)
+        if parsedCmd not in range(0, 255):
+            raise ValueError
+    except:
+        print("The command has to be an integer in range [0, 255] (single byte).")
+        return
 
-    if port:
-        smc = Sermatec(logging, host, port)
+    smc = Sermatec(kwargs["ip"], kwargs["port"], kwargs["protocolFilePath"])
+    print(f"Connecting to Sermatec at {kwargs['ip']}:{kwargs['port']}...")
+    await smc.connect()
+
+    print("Got data:")
+    if kwargs["raw"]:
+        print(await smc.getCustomRaw(parsedCmd))
     else:
-        smc = Sermatec(logging, host)
+        print(await smc.getCustom(parsedCmd))
+
+    print("Disconnecting")
+    await smc.disconnect()
+
+async def getFunc():
+    pass
+
+async def setFunc():
+    pass
+
+async def main(cmds : list, host : str, port : int = 8899):
+
+    smc = Sermatec(logging.Logger, host, port)
 
     await smc.connect()
     
@@ -31,29 +59,56 @@ if __name__ == "__main__":
         "ip",
         help = "IP address of the inverter."
     )
-    parser.add_argument(
-        "--port",
-        help = "API port. Defaults to 8899."
-    )
-    parser.add_argument(
-        "--get",
-        "-g",
-        help = "Get data from the inverter.",
+    
+    subparsers = parser.add_subparsers(dest = "cmd")
+    getParser = subparsers.add_parser("get", help = "Get data from the inverter.")
+    getParser.set_defaults(cmdFunc = getFunc)
+    getParser.add_argument(
+        "command",
+        help = "A type of data to query.",
         choices = ["serial", "battery", "grid", "parameters", "load"],
         action = "append"
+    )
+
+    setParser = subparsers.add_parser("set", help = "Configure a value in the inverter.")
+    setParser.set_defaults(cmdFunc = setFunc)
+
+    customgetParser = subparsers.add_parser("customget", help = "Query the inverter using custom command.")
+    customgetParser.set_defaults(cmdFunc = customgetFunc)
+    customgetParser.add_argument(
+        "command",
+        help = "A single-byte command to send.",
+    )
+    customgetParser.add_argument(
+        "--raw",
+        help = "Do not parse the response.",
+        action = "store_true"
+    )
+    
+    parser.add_argument(
+        "--port",
+        help = "API port. Defaults to 8899.",
+        default = 8899
     )
     parser.add_argument(
         "-v",
         help = "Print debug data.",
         action = "store_true"
     )
+    parser.add_argument(
+        "--protocolFilePath",
+        help = "JSON with the OSIM protocol description.",
+        default = (Path(__file__).parent / "protocol-en.json").resolve()
+    )
+
     args = parser.parse_args()
-    
-    if not args.get:
-        print("No command specified.")
-        sys.exit()
-    
+
     if args.v:
         logging.basicConfig(level = "DEBUG")
 
-    asyncio.run(main(args.get, args.ip, args.port))
+    if not args.cmd:
+        print("Error: No command specified.")
+        parser.print_help()
+        sys.exit()
+    else:
+        asyncio.run(args.cmdFunc(**vars(args)))
