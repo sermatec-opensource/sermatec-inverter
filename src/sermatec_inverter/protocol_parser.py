@@ -182,8 +182,8 @@ class SermatecProtocolParser:
             logger.debug("Bad response recipient address.")
             return False
         # Response command check.
-        if response[0x04:0x05] != expectedCommandByte:
-            logger.debug("Bad response expected command.")
+        if int.from_bytes(response[0x04:0x05], byteorder = "little", signed = False) != expectedCommandByte:
+            logger.debug(f"Bad response expected command. Expected: {expectedCommandByte}, got: {response[0x04:0x05]}.")
             return False
         # Zero.
         if response[0x05] != 0:
@@ -200,7 +200,7 @@ class SermatecProtocolParser:
 
         return True
 
-    def generateRequest(self, command : int) ->bytes:  
+    def generateRequest(self, command : int) -> bytes:  
         request : bytearray = bytearray([*self.REQ_SIGNATURE, *self.REQ_APP_ADDRESS, *self.REQ_INVERTER_ADDRESS, command, 0x00, 0x00])
         request += self.__calculateChecksum(request)
         request += self.REQ_FOOTER
@@ -211,7 +211,7 @@ class SermatecProtocolParser:
             
 
 if __name__ == "__main__":
-    logger.basicConfig(level = "DEBUG")
+    logging.basicConfig(level = "DEBUG")
     smc : SermatecProtocolParser = SermatecProtocolParser("protocol-en.json")
     #print(smc.getQueryCommands(0))
     binfile98 = open("../../dumps/98", "rb")
