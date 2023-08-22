@@ -33,13 +33,15 @@ class SermatecProtocolParser:
             try:
                 self.osim = protocolData["osim"]
             except KeyError:
-                raise KeyError("Protocol file malformed, 'osim' key not found.")
+                logger.error("Protocol file malformed, 'osim' key not found.")
+                raise ProtocolFileMalformed()
             
     def getCommandCodeFromName(self, commandName : str) -> int:
         if commandName in self.COMMAND_SHORT_NAMES:
             return self.COMMAND_SHORT_NAMES[commandName]
         else:
-            raise KeyError(f"Specified command '{commandName}' not found.")
+            logger.error(f"Specified command '{commandName}' not found.")
+            raise CommandNotFoundInProtocol()
 
     # Get all available query commands in the specified version.
     def getQueryCommands(self, version : int) -> list:
@@ -172,24 +174,35 @@ class SermatecProtocolParser:
             currentFieldData = reply[ replyPosition : (replyPosition + fieldLength) ]
             logger.debug(f"Parsing field data: {currentFieldData.hex(' ')}")
 
+            newField : dict = {}
+            
+            if "unitType" in field:
+                logger.debug(f"Field has a unit: {field['unitType']}")
+                newField["unit"] = field['unitType']
+            else:
+                newField["unit"] = None
+
             if fieldType == "int":
-                parsedData[fieldTag] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = True) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
+                newField["value"] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = True) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
             elif fieldType == "uInt":
-                parsedData[fieldTag] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = False) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
+                newField["value"] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = False) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
             elif fieldType == "string":
                 # The string is null-terminated, trimming everything after first occurence of '\0'.
                 trimmedString = currentFieldData.split(b"\x00", 1)[0]
-                parsedData[fieldTag] = trimmedString.decode('ascii')
+                newField["value"] = trimmedString.decode('ascii')
             elif fieldType == "bit":
                 binString : str = bin(int.from_bytes(currentFieldData, byteorder = "little", signed = False)).removeprefix("0b")
-                parsedData[fieldTag] = int(binString[fieldBitPosition])
+                newField["value"] = int(binString[fieldBitPosition])
             elif fieldType == "bitRange":
                 binString : str = bin(int.from_bytes(currentFieldData, byteorder = "little", signed = False)).removeprefix("0b")
-                parsedData[fieldTag] = binString[fieldFromBit:fieldEndBit]
+                newField["value"] = binString[fieldFromBit:fieldEndBit]
+            elif fieldType == "hex":
+                newField["value"] = currentFieldData.hex()
             else:
-                logger.error(f"The provided field is of an unsuported type '{fieldType}'")
+                logger.error(f"The provided field is of an unsuported type '{fieldType}'.")
                 raise ParsingNotImplemented()
 
+            parsedData[fieldTag] = newField
             logger.debug(f"Parsed: {parsedData[fieldTag]}")
 
             prevReplyPosition = replyPosition
