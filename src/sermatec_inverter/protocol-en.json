@@ -97,7 +97,8 @@
                 "order": 5,
                 "byteLen": 2,
                 "type": "int",
-                "name": "Charge and discharge status"
+                "name": "Charge and discharge status",
+                "parser": "batteryStatus"
               },
               {
                 "order": 6,
@@ -1426,7 +1427,8 @@
                 "byteLen": 2,
                 "type": "int",
                 "tag": "style",
-                "name": "Operating mode"
+                "name": "Operating mode",
+                "parser": "operatingMode"
               },
               {
                 "order": 7,
@@ -2085,7 +2087,8 @@
                 "byteLen": 2,
                 "type": "int",
                 "tag": "style",
-                "name": "Operating mode"
+                "name": "Operating mode",
+                "parser": "operatingMode"
               },
               {
                 "order": 7,
@@ -2387,7 +2390,8 @@
                 "byteLen": 2,
                 "type": "int",
                 "tag": "style",
-                "name": "Operating mode"
+                "name": "Operating mode",
+                "parser": "operatingMode"
               },
               {
                 "order": 7,
