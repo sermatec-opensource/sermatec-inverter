@@ -195,3 +195,8 @@ class Sermatec:
     
     async def getCustomRaw(self, command : int) -> bytes:
         return await self.__sendQuery(command)
+
+    async def get(self, commandName : str) -> dict:
+        data : bytes = await self.__sendQueryByName(commandName)
+        parsedData : dict = self.parser.parseReply(self.parser.getCommandCodeFromName(commandName), self.pcuVersion, data)
+        return parsedData
