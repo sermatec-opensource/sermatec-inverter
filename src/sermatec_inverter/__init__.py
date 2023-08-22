@@ -95,7 +95,7 @@ class Sermatec:
 
                 try:
                     version = await self.getPCUVersion()
-                except PCUVersionMalformed:
+                except (NoDataReceived, FailedResponseIntegrityCheck, PCUVersionMalformed):
                     _LOGGER.warning("Can't get PCU version! Using version 0, available parameters will be limited.")
                 else:
                     self.pcuVersion = version
