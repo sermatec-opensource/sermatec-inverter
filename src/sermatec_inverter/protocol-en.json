@@ -103,7 +103,7 @@
                 "order": 6,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "maximum allowable charging current",
+                "name": "battery max charging current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -111,7 +111,7 @@
                 "order": 7,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Maximum allowable discharge current",
+                "name": "battery max discharging current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -188,7 +188,7 @@
                 "order": 2,
                 "byteLen": 2,
                 "type": "int",
-                "name": "PVI power",
+                "name": "PV1 power",
                 "unitValue": "1",
                 "unitType": "W"
               },
@@ -220,7 +220,7 @@
                 "order": 6,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Invert A-phase voltage",
+                "name": "Inverter A phase voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -228,7 +228,7 @@
                 "order": 7,
                 "byteLen": 2,
                 "type": "int",
-                "name": "Invert phase A current",
+                "name": "Inverter A phase current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -260,7 +260,7 @@
                 "order": 11,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Invert B-phase voltage",
+                "name": "Inverter B phase voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -268,7 +268,7 @@
                 "order": 12,
                 "byteLen": 2,
                 "type": "int",
-                "name": "Invert B-phase current",
+                "name": "Inverter B phase current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -292,7 +292,7 @@
                 "order": 15,
                 "byteLen": 2,
                 "type": "int",
-                "name": "Grid B-phase current",
+                "name": "Grid B phase current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -300,7 +300,7 @@
                 "order": 16,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Invert C-phase voltage",
+                "name": "Inverter C phase voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -308,7 +308,7 @@
                 "order": 17,
                 "byteLen": 2,
                 "type": "int",
-                "name": "Invert C-phase current",
+                "name": "Inverter C phase current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -316,7 +316,7 @@
                 "order": 18,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "grid phase C voltage",
+                "name": "grid C phase voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -332,7 +332,7 @@
                 "order": 20,
                 "byteLen": 2,
                 "type": "int",
-                "name": "grid phase C current",
+                "name": "grid C phase current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -355,7 +355,7 @@
                 "order": 23,
                 "byteLen": 2,
                 "type": "int",
-                "name": "Grid-side active power",
+                "name": "Grid active power",
                 "unitValue": "1",
                 "unitType": "W"
               },
@@ -363,7 +363,7 @@
                 "order": 24,
                 "byteLen": 2,
                 "type": "int",
-                "name": "grid-side reactive power",
+                "name": "grid reactive power",
                 "unitValue": "1",
                 "unitType": "W"
               },
@@ -371,7 +371,7 @@
                 "order": 25,
                 "byteLen": 2,
                 "type": "int",
-                "name": "system apparent power",
+                "name": "grid apparent power",
                 "unitValue": "1",
                 "unitType": "Var"
               },
@@ -523,7 +523,7 @@
                 "order": 45,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Load phase A voltage",
+                "name": "backup phase A voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -531,7 +531,7 @@
                 "order": 46,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Load phase B voltage",
+                "name": "backup phase B voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -539,7 +539,7 @@
                 "order": 47,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Load phase C voltage",
+                "name": "backup phase C voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -547,7 +547,7 @@
                 "order": 48,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "load voltage frequency",
+                "name": "backup voltage frequency",
                 "unitValue": "0.01",
                 "unitType": "HZ"
               },
@@ -555,7 +555,7 @@
                 "order": 49,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load phase A current",
+                "name": "backup phase A current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -563,7 +563,7 @@
                 "order": 50,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load phase B current",
+                "name": "backup phase B current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -571,7 +571,7 @@
                 "order": 51,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load phase C current",
+                "name": "backup phase C current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -579,14 +579,14 @@
                 "order": 52,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load power factor",
+                "name": "backup power factor",
                 "unitValue": "0.001"
               },
               {
                 "order": 53,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load active power",
+                "name": "backup active power",
                 "unitValue": "1",
                 "unitType": "VA"
               },
@@ -594,7 +594,7 @@
                 "order": 54,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load reactive power",
+                "name": "backup reactive power",
                 "unitValue": "1",
                 "unitType": "Var"
               },
@@ -602,7 +602,7 @@
                 "order": 55,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load apparent power",
+                "name": "backup apparent power",
                 "unitValue": "1",
                 "unitType": "W"
               }
@@ -691,7 +691,7 @@
                 "order": 9,
                 "byteLen": 2,
                 "type": "bit",
-                "name": "switch machine",
+                "name": "inverter switched on",
                 "tag": "onOff",
                 "same": true,
                 "bitPosition": 0
@@ -758,7 +758,7 @@
                 "order": 17,
                 "byteLen": 2,
                 "type": "bitRange",
-                "name": "The number of units running in parallel",
+                "name": "number of units running in parallel",
                 "same": true,
                 "fromBit": 13,
                 "endBit": 16
@@ -1820,7 +1820,7 @@
                 "order": 2,
                 "byteLen": 2,
                 "type": "int",
-                "name": "remote load功率"
+                "name": "remote load"
               }
             ]
           },
@@ -3587,7 +3587,7 @@
                 "order": 2,
                 "byteLen": 2,
                 "type": "int",
-                "name": "PVI power",
+                "name": "PV1 power",
                 "unitValue": "1",
                 "unitType": "W"
               },
@@ -3619,7 +3619,7 @@
                 "order": 6,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Invert A-phase voltage",
+                "name": "Inverter A phase voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -3627,7 +3627,7 @@
                 "order": 7,
                 "byteLen": 2,
                 "type": "int",
-                "name": "Invert phase A current",
+                "name": "Inverter A phase current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -3659,7 +3659,7 @@
                 "order": 11,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Invert B-phase voltage",
+                "name": "Inverter B phase voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -3667,7 +3667,7 @@
                 "order": 12,
                 "byteLen": 2,
                 "type": "int",
-                "name": "Invert B-phase current",
+                "name": "Inverter B phase current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -3691,7 +3691,7 @@
                 "order": 15,
                 "byteLen": 2,
                 "type": "int",
-                "name": "Grid B-phase current",
+                "name": "Grid B phase current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -3699,7 +3699,7 @@
                 "order": 16,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Invert C-phase voltage",
+                "name": "Inverter C phase voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -3707,7 +3707,7 @@
                 "order": 17,
                 "byteLen": 2,
                 "type": "int",
-                "name": "Invert C-phase current",
+                "name": "Inverter C phase current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -3715,7 +3715,7 @@
                 "order": 18,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "grid phase C voltage",
+                "name": "grid C phase voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -3731,7 +3731,7 @@
                 "order": 20,
                 "byteLen": 2,
                 "type": "int",
-                "name": "grid phase C current",
+                "name": "grid C phase current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -3754,7 +3754,7 @@
                 "order": 23,
                 "byteLen": 2,
                 "type": "int",
-                "name": "Grid-side active power",
+                "name": "Grid active power",
                 "unitValue": "1",
                 "unitType": "W"
               },
@@ -3762,7 +3762,7 @@
                 "order": 24,
                 "byteLen": 2,
                 "type": "int",
-                "name": "grid-side reactive power",
+                "name": "grid reactive power",
                 "unitValue": "1",
                 "unitType": "W"
               },
@@ -3770,7 +3770,7 @@
                 "order": 25,
                 "byteLen": 2,
                 "type": "int",
-                "name": "system apparent power",
+                "name": "grid apparent power",
                 "unitValue": "1",
                 "unitType": "Var"
               },
@@ -3922,7 +3922,7 @@
                 "order": 45,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Load phase A voltage",
+                "name": "backup phase A voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -3930,7 +3930,7 @@
                 "order": 46,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Load phase B voltage",
+                "name": "backup phase B voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -3938,7 +3938,7 @@
                 "order": 47,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "Load phase C voltage",
+                "name": "backup phase C voltage",
                 "unitValue": "0.1",
                 "unitType": "V"
               },
@@ -3946,7 +3946,7 @@
                 "order": 48,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "load voltage frequency",
+                "name": "backup voltage frequency",
                 "unitValue": "0.01",
                 "unitType": "HZ"
               },
@@ -3954,7 +3954,7 @@
                 "order": 49,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load phase A current",
+                "name": "backup phase A current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -3962,7 +3962,7 @@
                 "order": 50,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load phase B current",
+                "name": "backup phase B current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -3970,7 +3970,7 @@
                 "order": 51,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load phase C current",
+                "name": "backup phase C current",
                 "unitValue": "0.1",
                 "unitType": "A"
               },
@@ -3978,14 +3978,14 @@
                 "order": 52,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load power factor",
+                "name": "backup power factor",
                 "unitValue": "0.001"
               },
               {
                 "order": 53,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load active power",
+                "name": "backup active power",
                 "unitValue": "1",
                 "unitType": "VA"
               },
@@ -3993,7 +3993,7 @@
                 "order": 54,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load reactive power",
+                "name": "backup reactive power",
                 "unitValue": "1",
                 "unitType": "Var"
               },
@@ -4001,7 +4001,7 @@
                 "order": 55,
                 "byteLen": 2,
                 "type": "int",
-                "name": "load apparent power",
+                "name": "backup apparent power",
                 "unitValue": "1",
                 "unitType": "W"
               },
