@@ -4,9 +4,20 @@ import logging
 import asyncio
 from pathlib import Path
 from . import Sermatec
+from .protocol_parser import SermatecProtocolParser
+from .exceptions import *
 
 async def customgetFunc(**kwargs):
-    
+    """Query the inverter with a custom command.
+
+    Keyword Args:
+        command (int): The command's single-byte code. 
+        ip (str): Inverter's IP.
+        port (str): Inverter's API port.
+        protocolFilePath (str): Path to the protocol JSON.
+        raw (bool): True = parse the response, otherwise return raw bytes.
+    """
+
     # Parsing command - it can be hex, dec or whathever base integer.
     try:
         parsedCmd = int(kwargs["command"], 0)
@@ -17,22 +28,46 @@ async def customgetFunc(**kwargs):
         return
 
     smc = Sermatec(kwargs["ip"], kwargs["port"], kwargs["protocolFilePath"])
-    print(f"Connecting to Sermatec at {kwargs['ip']}:{kwargs['port']}...")
+    print(f"Connecting to Sermatec at {kwargs['ip']}:{kwargs['port']}...", end = "")
     await smc.connect()
+    print("OK")
 
-    print("Got data:")
+    print("Getting data...")
+    data : str | dict = {}
+
     if kwargs["raw"]:
-        print(await smc.getCustomRaw(parsedCmd))
+        data = (await smc.getCustomRaw(parsedCmd)).hex(' ')
     else:
-        print(await smc.getCustom(parsedCmd))
+        try:
+            data = await smc.getCustom(parsedCmd)
+        except CommandNotFoundInProtocol:
+            print("The command was not found in protocol, unable to parse. Try --raw to get raw bytes.")
+        except ProtocolFileMalformed | ParsingNotImplemented:
+            print("There was an error parsing the command. Refer to logs.")
 
-    print("Disconnecting")
+    print(data)
+
+    print("Disconnecting...", end = "")
     await smc.disconnect()
+    print("OK")
 
-async def getFunc():
+async def getFunc(**kwargs):
+    
+    smc = Sermatec(kwargs["ip"], kwargs["port"], kwargs["protocolFilePath"])
+    print(f"Connecting to Sermatec at {kwargs['ip']}:{kwargs['port']}...", end = "")
+    await smc.connect()
+    print("OK")
+
+    print("Getting data...")
     pass
 
-async def setFunc():
+    
+
+    print("Disconnecting...", end = "")
+    await smc.disconnect()
+    print("OK")
+
+async def setFunc(**kwargs):
     pass
 
 async def main(cmds : list, host : str, port : int = 8899):
@@ -63,10 +98,12 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(dest = "cmd")
     getParser = subparsers.add_parser("get", help = "Get data from the inverter.")
     getParser.set_defaults(cmdFunc = getFunc)
+
+    cmdShortNames = SermatecProtocolParser.COMMAND_SHORT_NAMES.keys()
     getParser.add_argument(
         "command",
         help = "A type of data to query.",
-        choices = ["serial", "battery", "grid", "parameters", "load"],
+        choices = cmdShortNames,
         action = "append"
     )
 
