@@ -45,7 +45,7 @@ async def customgetFunc(**kwargs):
         except ProtocolFileMalformed | ParsingNotImplemented:
             print("There was an error parsing the command. Refer to logs.")
 
-    print(data)
+    if data: print(data)
 
     print("Disconnecting...", end = "")
     await smc.disconnect()
@@ -61,7 +61,16 @@ async def getFunc(**kwargs):
     print("Getting data...")
     pass
 
-    
+    data : dict = {}
+
+    try:
+        data = await smc.get(kwargs["command"])
+    except CommandNotFoundInProtocol:
+        print("The command was not found in protocol, unable to parse. Try --raw to get raw bytes.")
+    except ProtocolFileMalformed | ParsingNotImplemented:
+        print("There was an error parsing the command. Refer to logs.")
+
+    if data: print(data)
 
     print("Disconnecting...", end = "")
     await smc.disconnect()
@@ -104,7 +113,6 @@ if __name__ == "__main__":
         "command",
         help = "A type of data to query.",
         choices = cmdShortNames,
-        action = "append"
     )
 
     setParser = subparsers.add_parser("set", help = "Configure a value in the inverter.")
