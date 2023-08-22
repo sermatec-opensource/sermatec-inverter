@@ -1,7 +1,7 @@
 import logging
 import json
 import re
-import math
+from typing import Any, Callable
 from .exceptions import *
 
 # Local module logger.
@@ -24,6 +24,36 @@ class SermatecProtocolParser:
         "workingParameters"   : 0x95,
         "load"                : 0x0d, # Same as bmsStatus, keeping for backwards compatibility.
         "bmsStatus"           : 0x0d
+    }
+
+    def __parseBatteryStatus(self, value : int) -> str:
+        if value == 0x0011:
+            return "charging"
+        elif value == 0x0022:
+            return "discharging"
+        elif value == 0x0033:
+            return "stand-by"
+        else:
+            return "unknown"
+
+    def __parseOperatingMode(self, value : int) -> str:
+        if value == 0x0001:
+            return "General Mode"
+        elif value == 0x0002:
+            return "Energy Storage Mode"
+        elif value == 0x0003:
+            return "Micro-grid"
+        elif value == 0x0004:
+            return "Peak-Valley"
+        elif value == 0x0005:
+            return "AC Coupling"
+        else:
+            return "unknown"
+
+    # Enquoting the SermatecProtocolParser type because it is a forward declaration (PEP 484).
+    FIELD_PARSERS : dict[str, Callable[["SermatecProtocolParser", Any], Any]] = {
+        "batteryStatus" : __parseBatteryStatus,
+        "operatingMode" : __parseOperatingMode,
     }
 
 
@@ -84,6 +114,7 @@ class SermatecProtocolParser:
             return len(str(multiplier).split(".")[1])
         else:
             return 0
+        
 
     def parseReply(self, command : int, version : int, reply : bytes) -> dict:
         """Parse a command reply using a specified version definition.
@@ -202,7 +233,13 @@ class SermatecProtocolParser:
                 logger.error(f"The provided field is of an unsuported type '{fieldType}'.")
                 raise ParsingNotImplemented()
 
+            # Some field have a meaning encoded to integers: trying to parse.
+            if "parser" in field and field["parser"] in self.FIELD_PARSERS:
+                logger.debug("This field has a parser available, parsing.")
+                newField["value"] = self.FIELD_PARSERS[field["parser"]](self, newField["value"])
+
             parsedData[fieldTag] = newField
+
             logger.debug(f"Parsed: {parsedData[fieldTag]}")
 
             prevReplyPosition = replyPosition
@@ -262,7 +299,6 @@ class SermatecProtocolParser:
         logger.debug(f"Built command: {[hex(x) for x in request]}")
 
         return request
-            
 
 if __name__ == "__main__":
     logging.basicConfig(level = "DEBUG")
