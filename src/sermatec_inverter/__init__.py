@@ -1,6 +1,7 @@
 import logging
 import asyncio
 from . import protocol_parser
+from .exceptions import *
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,17 +42,17 @@ class Sermatec:
             if len(data) == 0:
                 _LOGGER.error(f"No data received when issued command {command}: connection closed by the inverter.")
                 self.connected = False
-                raise ValueError("No data received")
+                raise NoDataReceived()
             
             if not self.parser.checkResponseIntegrity(data, command):
-                _LOGGER.error(f"Command {command} response data malformed.")
-                raise ValueError("Response malformed")
+                _LOGGER.error(f"Command 0x{command:02x} response data malformed.")
+                raise FailedResponseIntegrityCheck()
 
             return data
                     
         else:
             _LOGGER.error("Can't send request: not connected.")
-            raise RuntimeError("Not connected")
+            raise NotConnected()
 
     async def __sendQueryByName(self, commandName : str) -> bytes:
         command : int = self.parser.getCommandCodeFromName(commandName)
@@ -89,7 +90,17 @@ class Sermatec:
                 self.connected = False
                 return False
             else:
+                version : int = 0
                 self.connected = True
+
+                try:
+                    version = await self.getPCUVersion()
+                except PCUVersionMalformed:
+                    _LOGGER.warning("Can't get PCU version! Using version 0, available parameters will be limited.")
+                else:
+                    self.pcuVersion = version
+                    _LOGGER.info(f"Inverter's PCU version: {version}")
+                
                 return True
         else:
             return True
@@ -106,11 +117,22 @@ class Sermatec:
 # ========================================================================
 # Query methods
 # ========================================================================
+    async def getCustom(self, command : int) -> dict:
+        data : bytes = await self.__sendQuery(command)
+        parsedData : dict = self.parser.parseReply(command, self.pcuVersion, data)
+        return parsedData
+    
+    async def getCustomRaw(self, command : int) -> bytes:
+        return await self.__sendQuery(command)
+
+    async def get(self, commandName : str) -> dict:
+        data : bytes = await self.__sendQueryByName(commandName)
+        parsedData : dict = self.parser.parseReply(self.parser.getCommandCodeFromName(commandName), self.pcuVersion, data)
+        return parsedData
+    
     async def getSerial(self) -> str:
-        data = await self.__sendQueryByName("systemInformation")
-        data = data[0x0D:]
-        data = data.split(b"\x00", 1)[0]
-        serial = data.decode('ascii')
+        parsedData : dict = await self.get("systemInformation")
+        serial : str = parsedData["product_sn"]["value"]
         return serial
     
     async def getBatteryInfo(self) -> dict:
@@ -186,17 +208,19 @@ class Sermatec:
         load = int.from_bytes(data[0x0B:0x0D], byteorder = "big", signed = False)
         return load
 
-    # async def getPCUVersion(self) -> int:
+    async def getPCUVersion(self) -> int:
+        parsedData : dict = await self.get("systemInformation")
 
-    async def getCustom(self, command : int) -> dict:
-        data : bytes = await self.__sendQuery(command)
-        parsedData : dict = self.parser.parseReply(command, self.pcuVersion, data)
-        return parsedData
-    
-    async def getCustomRaw(self, command : int) -> bytes:
-        return await self.__sendQuery(command)
+        if not "protocol_version_number" in parsedData:
+            _LOGGER.error("PCU version is missing!")
+            raise PCUVersionMalformed()
+        else:
+            version : int = 0
 
-    async def get(self, commandName : str) -> dict:
-        data : bytes = await self.__sendQueryByName(commandName)
-        parsedData : dict = self.parser.parseReply(self.parser.getCommandCodeFromName(commandName), self.pcuVersion, data)
-        return parsedData
+            try:
+                version = int(parsedData["protocol_version_number"]["value"])
+            except ValueError:
+                _LOGGER.error("Can't parse PCU version!")
+                raise PCUVersionMalformed()
+            
+            return version
