@@ -29,8 +29,11 @@ async def customgetFunc(**kwargs):
 
     smc = Sermatec(kwargs["ip"], kwargs["port"], kwargs["protocolFilePath"])
     print(f"Connecting to Sermatec at {kwargs['ip']}:{kwargs['port']}...", end = "")
-    await smc.connect()
-    print("OK")
+    if await smc.connect():
+        print("OK")
+    else:
+        print("Can't connect.")
+        return
 
     print("Getting data...")
     data : str | dict = {}
@@ -41,9 +44,13 @@ async def customgetFunc(**kwargs):
         try:
             data = await smc.getCustom(parsedCmd)
         except CommandNotFoundInProtocol:
-            print("The command was not found in protocol, unable to parse. Try --raw to get raw bytes.")
-        except ProtocolFileMalformed | ParsingNotImplemented:
+            print("The command was not found in protocol for inverter's version, unable to parse. Try --raw to get raw bytes.")
+        except (ProtocolFileMalformed, ParsingNotImplemented):
             print("There was an error parsing the command. Refer to logs.")
+        except (NoDataReceived):
+            print("Inverter sent no data.")
+        except (FailedResponseIntegrityCheck):
+            print("The response was malformed.")
 
     if data: print(data)
 
@@ -55,8 +62,11 @@ async def getFunc(**kwargs):
     
     smc = Sermatec(kwargs["ip"], kwargs["port"], kwargs["protocolFilePath"])
     print(f"Connecting to Sermatec at {kwargs['ip']}:{kwargs['port']}...", end = "")
-    await smc.connect()
-    print("OK")
+    if await smc.connect():
+        print("OK")
+    else:
+        print("Can't connect.")
+        return
 
     print("Getting data...")
     pass
@@ -66,10 +76,14 @@ async def getFunc(**kwargs):
     try:
         data = await smc.get(kwargs["command"])
     except CommandNotFoundInProtocol:
-        print("The command was not found in protocol, unable to parse. Try --raw to get raw bytes.")
-    except ProtocolFileMalformed | ParsingNotImplemented:
+        print("The command was not found in protocol for inverter's version, unable to parse. Try --raw to get raw bytes.")
+    except (ProtocolFileMalformed, ParsingNotImplemented):
         print("There was an error parsing the command. Refer to logs.")
-
+    except (NoDataReceived):
+        print("Inverter sent no data.")
+    except (FailedResponseIntegrityCheck):
+        print("The response was malformed.")
+        
     if data: print(data)
 
     print("Disconnecting...", end = "")
