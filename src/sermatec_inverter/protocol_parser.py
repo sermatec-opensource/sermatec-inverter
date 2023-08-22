@@ -60,7 +60,7 @@ class SermatecProtocolParser:
             cmd = next((cmd for cmd in ver["commands"] if int(cmd["type"],base=16) == command), cmd)
 
         if not cmd:
-            raise KeyError(f"Specified command '{command : hex}' not found.")
+            raise KeyError(f"Specified command 0x'{command:02x}' not found.")
 
         return cmd
     
@@ -81,7 +81,7 @@ class SermatecProtocolParser:
             cmdName     : dict = cmd["comment"]
             cmdFields   : dict = cmd["fields"]
         except KeyError:
-            raise KeyError(f"Protocol file malformed, can't process command 0x{command : hex}")
+            raise KeyError(f"Protocol file malformed, can't process command 0x'{command:02x}'")
         logger.debug(f"It is command 0x{cmdType}: {cmdName} with {len(cmdFields)} fields")
 
         parsedData : dict = {}
