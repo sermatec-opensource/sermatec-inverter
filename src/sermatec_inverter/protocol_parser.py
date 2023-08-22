@@ -2,6 +2,7 @@ import logging
 import json
 import re
 import math
+from .exceptions import *
 
 # Local module logger.
 logger = logging.getLogger(__name__)
@@ -52,15 +53,27 @@ class SermatecProtocolParser:
         return listCmds
 
     def __getCommandByVersion(self, command : int, version : int) -> dict:
-        # Get all commands supported by the specified versions.
+        """Get a newest version of a reply to a command specified.
+
+        Args:
+            command (int): Command to get a reply structure for.
+            version (int): Version of the MCU.
+
+        Raises:
+            CommandNotFoundInProtocol: The command was not found in protocol.
+
+        Returns:
+            dict: Structure of the reply.
+        """
+
         allSupportedVersions = [ver for ver in self.osim["versions"] if ver["version"] <= version]
         cmd = {}
-        # Get a newest version of a specified command.
+
         for ver in allSupportedVersions:
             cmd = next((cmd for cmd in ver["commands"] if int(cmd["type"],base=16) == command), cmd)
 
         if not cmd:
-            raise KeyError(f"Specified command 0x'{command:02x}' not found.")
+            raise CommandNotFoundInProtocol(f"Specified command 0x'{command:02x}' not found.")
 
         return cmd
     
@@ -70,22 +83,41 @@ class SermatecProtocolParser:
         else:
             return 0
 
-    # Parse a command reply using a specified version definition.
-    # Command can be probably extracted from the reply, but here we check the integrity.
     def parseReply(self, command : int, version : int, reply : bytes) -> dict:
-        cmd : dict = self.__getCommandByVersion(command, version)
+        """Parse a command reply using a specified version definition.
+
+        Args:
+            command (int): A single-byte code of the command to parse.
+            version (int): A MCU version (used to look up a correct response format).
+            reply (bytes): A reply to parse.
+
+        Returns:
+            dict: Parsed reply.
+
+        Raises:
+            CommandNotFoundInProtocol: The specified command is not found in the protocol (thus can't be parsed).
+            ProtocolFileMalformed: There was an unexpected error in the protocol file.
+            ParsingNotImplemented: There is a field in command reply which is not supported.
+        """      
+        
         logger.debug(f"Reply to parse: {reply[self.REPLY_OFFSET_DATA:].hex(' ')}")
+        
+        logger.debug("Looking for the command in protocol.")
+        # This may throw CommandNotFoundInProtocol.
+        cmd : dict = self.__getCommandByVersion(command, version)
 
         try:
             cmdType     : dict = cmd["type"]
             cmdName     : dict = cmd["comment"]
             cmdFields   : dict = cmd["fields"]
         except KeyError:
-            raise KeyError(f"Protocol file malformed, can't process command 0x'{command:02x}'")
+            logger.error(f"Protocol file malformed, can't process command 0x'{command:02x}'")
+            raise ProtocolFileMalformed()
+        
         logger.debug(f"It is command 0x{cmdType}: {cmdName} with {len(cmdFields)} fields")
 
-        parsedData : dict = {}
-        replyPosition = self.REPLY_OFFSET_DATA
+        parsedData : dict       = {}
+        replyPosition : int     = self.REPLY_OFFSET_DATA
         prevReplyPosition : int = 0
 
         for idx, field in enumerate(cmdFields):
@@ -97,25 +129,29 @@ class SermatecProtocolParser:
             logger.debug(f"== Field #{idx} (reply byte #{replyPosition})")
 
             if not (("name" or "byteLen" or "type") in field):
-                raise KeyError(f"Field has a 'name', 'byteLen' or 'type' missing: {field}.")
+                logger.error(f"Field has a 'name', 'byteLen' or 'type' missing: {field}.")
+                raise ProtocolFileMalformed()
 
             fieldLength = int(field["byteLen"])
             if fieldLength < 1:
-                raise ValueError("Field length is zero or negative.")
+                logger.error("Field length is zero or negative.")
+                raise ProtocolFileMalformed()
 
             fieldType = field["type"]
             if fieldType == "bit":
                 if "bitPosition" in field:
                     fieldBitPosition = field["bitPosition"]
                 else:
-                    raise KeyError("Field is of a type 'bit', but is missing key 'bitPosition'.")
+                    logger.error("Field is of a type 'bit', but is missing key 'bitPosition'.")
+                    raise ProtocolFileMalformed()
 
             if fieldType == "bitRange":
                 if "fromBit" and "endBit":
                     fieldFromBit = field["fromBit"]
                     fieldEndBit = field["endBit"]
                 else:
-                    raise KeyError("Field is of a type 'bitRange' but is missing key 'fromBit' or 'endBit'.")
+                    logger.error("Field is of a type 'bitRange' but is missing key 'fromBit' or 'endBit'.")
+                    raise ProtocolFileMalformed()
 
 
             fieldName = field["name"]
@@ -127,7 +163,8 @@ class SermatecProtocolParser:
                 try:
                     fieldMultiplier : float = float(field["unitValue"])
                 except:
-                    raise SyntaxError("Can't convert field's unitValue to float.")
+                    logger.error("Can't convert field's unitValue to float.")
+                    raise ProtocolFileMalformed()
             else:
                 fieldMultiplier : float = 1
                 logger.debug(f"Field {fieldName} has not 'unitValue' key, using 1 as a default multiplier.")          
@@ -150,7 +187,8 @@ class SermatecProtocolParser:
                 binString : str = bin(int.from_bytes(currentFieldData, byteorder = "little", signed = False)).removeprefix("0b")
                 parsedData[fieldTag] = binString[fieldFromBit:fieldEndBit]
             else:
-                raise TypeError(f"The provided field is of an unsuported type '{fieldType}'")
+                logger.error(f"The provided field is of an unsuported type '{fieldType}'")
+                raise ParsingNotImplemented()
 
             logger.debug(f"Parsed: {parsedData[fieldTag]}")
 
