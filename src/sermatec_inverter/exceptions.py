@@ -1,20 +1,20 @@
-class ResponseMalformed(Exception):
+class NoDataReceived(BaseException):
     pass
 
-class NoDataReceived(Exception):
+class FailedResponseIntegrityCheck(BaseException):
     pass
 
-class FailedResponseIntegrityCheck(Exception):
+class NotConnected(BaseException):
     pass
 
-class NotConnected(Exception):
+class ProtocolFileMalformed(BaseException):
     pass
 
-class ProtocolFileMalformed(Exception):
+class CommandNotFoundInProtocol(BaseException):
     pass
 
-class CommandNotFoundInProtocol(Exception):
+class ParsingNotImplemented(BaseException):
     pass
 
-class ParsingNotImplemented(Exception):
+class PCUVersionMalformed(BaseException):
     pass
