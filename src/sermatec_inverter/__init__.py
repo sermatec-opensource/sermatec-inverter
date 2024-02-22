@@ -34,9 +34,18 @@ class Sermatec:
         if self.isConnected():
             dataToSend = self.parser.generateRequest(command)
             self.writer.write(dataToSend)
-            await self.writer.drain()
+            try:
+                await asyncio.wait_for(self.writer.drain(), timeout=10)
+            except asyncio.TimeoutError:
+                _LOGGER.error("Timeout when sending request to inverter.")
+                raise NoDataReceived()
 
-            data = await self.reader.read(256)
+            try:
+                data = await asyncio.wait_for(self.reader.read(256), timeout=60)
+            except asyncio.TimeoutError:
+                _LOGGER.error("Timeout when waiting for response from the inverter.")
+                raise NoDataReceived()
+
             _LOGGER.debug(f"Received data: { data.hex(' ', 1) }")
 
             if len(data) == 0:
@@ -85,7 +94,7 @@ class Sermatec:
             confut = asyncio.open_connection(host = self.host, port = self.port)
             try:
                 self.reader, self.writer = await asyncio.wait_for(confut, timeout = 3)
-            except:
+            except asyncio.TimeoutError:
                 _LOGGER.error("Couldn't connect to the inverter.")
                 self.connected = False
                 return False
