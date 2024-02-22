@@ -255,7 +255,7 @@ class SermatecProtocolParser:
         
         logger.debug(f"Calculated checksum: {hex(checksum)}")
 
-        return checksum.to_bytes(1)
+        return checksum.to_bytes(1, byteorder="little")
 
     def checkResponseIntegrity(self, response : bytes, expectedCommandByte : int) -> bool:
         # Length check.
@@ -285,7 +285,7 @@ class SermatecProtocolParser:
             logger.debug(f"Bad response checksum: {response[-0x03:-0x02].hex()}")
             return False
         # Footer check.
-        if response[-0x01] != int.from_bytes(self.REQ_FOOTER):
+        if response[-0x01] != int.from_bytes(self.REQ_FOOTER, byteorder="big"):
             logger.debug("Bad response footer.")
             return False
 
