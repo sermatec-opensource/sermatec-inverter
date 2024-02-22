@@ -210,8 +210,6 @@ class SermatecProtocolParser:
             if "unitType" in field:
                 logger.debug(f"Field has a unit: {field['unitType']}")
                 newField["unit"] = field['unitType']
-            else:
-                newField["unit"] = None
 
             if fieldType == "int":
                 newField["value"] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = True) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
@@ -230,8 +228,7 @@ class SermatecProtocolParser:
             elif fieldType == "hex":
                 newField["value"] = currentFieldData.hex()
             else:
-                logger.error(f"The provided field is of an unsuported type '{fieldType}'.")
-                raise ParsingNotImplemented()
+                logger.warning(f"The provided field is of an unsuported type '{fieldType}'. Please contact developer.")
 
             # Some field have a meaning encoded to integers: trying to parse.
             if "parser" in field and field["parser"] in self.FIELD_PARSERS:
