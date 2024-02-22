@@ -1,0 +1,5 @@
+- representing an absence of values:
+    - null
+    - None
+    - ""
+    - simply not inserting the key, e.g. `'total_photovoltaic_power_generation': {}`
