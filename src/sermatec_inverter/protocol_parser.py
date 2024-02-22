@@ -155,6 +155,9 @@ class SermatecProtocolParser:
 
         for idx, field in enumerate(cmdFields):
 
+            # Whether to ignore this field (unknown type, reserved field...)
+            ignoreField : bool = False
+
             if ("same" in field and field["same"]):
                 logger.debug(f"Staying at the same byte.")
                 replyPosition = prevReplyPosition
@@ -227,7 +230,10 @@ class SermatecProtocolParser:
                 newField["value"] = binString[fieldFromBit:fieldEndBit]
             elif fieldType == "hex":
                 newField["value"] = currentFieldData.hex()
+            elif fieldType == "preserve":
+                ignoreField = True
             else:
+                ignoreField = True
                 logger.warning(f"The provided field is of an unsuported type '{fieldType}'. Please contact developer.")
 
             # Some field have a meaning encoded to integers: trying to parse.
@@ -235,9 +241,9 @@ class SermatecProtocolParser:
                 logger.debug("This field has a parser available, parsing.")
                 newField["value"] = self.FIELD_PARSERS[field["parser"]](self, newField["value"])
 
-            parsedData[fieldTag] = newField
-
-            logger.debug(f"Parsed: {parsedData[fieldTag]}")
+            if not ignoreField:
+                parsedData[fieldTag] = newField
+                logger.debug(f"Parsed: {parsedData[fieldTag]}")
 
             prevReplyPosition = replyPosition
             replyPosition += fieldLength
