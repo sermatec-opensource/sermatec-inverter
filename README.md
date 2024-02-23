@@ -1,6 +1,9 @@
 ![License badge](https://img.shields.io/github/license/andreondra/sermatec-inverter?style=for-the-badge)
 
 # Sermatec Solar Inverter
+
+🚧🚧🚧 **NOTICE: currently a big refactoring is in progress. Use master version only for testing.** 🚧🚧🚧
+
 This repository contains local API documentation for the Sermatec solar inverter and communication scripts.
 
 Whole communication with the inverter runs through the UART-TCP converter USR-WIFI232-B2, which supports 802.11 b/g/n. It works either in a station mode (for connection to the home AP) or in a access point mode (local connection mode in the official ap). See docs below for more technical information.
@@ -21,22 +24,31 @@ If you want to help with decoding the proprietary Sermatec protocol, choose if y
 ## Console interface usage
 
 The script takes very few args to run:
-1. the `--get` arg to know which kind of data you want to retrieve.
-2. the ip of your inverter.
+1. the ip of your inverter.
+2. operation to do
+    - `get`: retrieve data from inverter, must be followed by type of data:
+        - systemInformation, batteryStatus, gridPVStatus, runningStatus, workingParameters, load, bmsStatus
+    - `customget`: sent custom query command, must be followed by command code (single byte, decimal or hex):
+        - e.g. `0x98`
+        - use with care, may cause unexpected/dangerous behaviour
+    - `set`: set configuration data
+        - not yet implemented
 
 The script also takes few optional args:
 1. the `-v` flag to have a verbose output.
 2. the `--port` arg to use a different port than default 8899 for inverter connection.
 3. the `-h` or `--help` flag to display the help about the command
+4. the `--raw` arg to not parse a response from the inverter (only raw data will be shown, useful for debugging, testing and development)
+5. the `--protocolFilePath` arg to supply a custom path to JSON describing the protocol. Usually not needed.
 
 #### Examples
 Having battery info on an inverter with 10.0.0.254 ip:
 ```bash
-python3 -m src.sermatec_inverter --get=battery 10.0.0.254
+python3 -m src.sermatec_inverter 10.0.0.254 get batteryStatus
 ```
 Having grid info using the verbose mode with a 192.168.0.254 inverter with port 8900:
 ```bash
-python3 -m src.sermatec_inverter --get=grid -v --port=8900 192.168.0.254
+python3 -m src.sermatec_inverter -v --port=8900 192.168.0.254 get gridPVStatus
 ```
 
 ### *Newest version:* Source
