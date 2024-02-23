@@ -93,20 +93,6 @@ async def getFunc(**kwargs):
 async def setFunc(**kwargs):
     pass
 
-async def main(cmds : list, host : str, port : int = 8899):
-
-    smc = Sermatec(logging.Logger, host, port)
-
-    await smc.connect()
-    
-    if "serial" in cmds:        print(await smc.getSerial())
-    if "battery" in cmds:       print(await smc.getBatteryInfo())
-    if "grid" in cmds:          print(await smc.getGridPVInfo())
-    if "parameters" in cmds:    print(await smc.getWorkingParameters())
-    if "load" in cmds:          print(await smc.getLoad())
-
-    await smc.disconnect()
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
