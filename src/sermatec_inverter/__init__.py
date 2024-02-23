@@ -106,21 +106,21 @@ class Sermatec:
 # ========================================================================
 # Query methods
 # ========================================================================
-    async def getCustom(self, command : int) -> dict:
+    async def queryCustom(self, command : int) -> dict:
         data : bytes = await self.__sendQuery(command)
         parsedData : dict = self.parser.parseReply(command, self.pcuVersion, data)
         return parsedData
     
-    async def getCustomRaw(self, command : int) -> bytes:
+    async def queryCustomRaw(self, command : int) -> bytes:
         return await self.__sendQuery(command)
 
-    async def get(self, commandName : str) -> dict:
+    async def query(self, commandName : str) -> dict:
         data : bytes = await self.__sendQueryByName(commandName)
         parsedData : dict = self.parser.parseReply(self.parser.getCommandCodeFromName(commandName), self.pcuVersion, data)
         return parsedData
 
     async def getPCUVersion(self) -> int:
-        parsedData : dict = await self.get("systemInformation")
+        parsedData : dict = await self.query("systemInformation")
 
         if not "protocol_version_number" in parsedData:
             _LOGGER.error("PCU version is missing!")

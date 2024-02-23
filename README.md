@@ -26,9 +26,9 @@ If you want to help with decoding the proprietary Sermatec protocol, choose if y
 The script takes very few args to run:
 1. the ip of your inverter.
 2. operation to do
-    - `get`: retrieve data from inverter, must be followed by type of data:
+    - `query`: retrieve data from inverter, must be followed by type of data:
         - systemInformation, batteryStatus, gridPVStatus, runningStatus, workingParameters, load, bmsStatus
-    - `customget`: sent custom query command, must be followed by command code (single byte, decimal or hex):
+    - `customquery`: sent custom query command, must be followed by command code (single byte, decimal or hex):
         - e.g. `0x98`
         - use with care, may cause unexpected/dangerous behaviour
     - `set`: set configuration data
@@ -44,11 +44,11 @@ The script also takes few optional args:
 #### Examples
 Having battery info on an inverter with 10.0.0.254 ip:
 ```bash
-python3 -m src.sermatec_inverter 10.0.0.254 get batteryStatus
+python3 -m src.sermatec_inverter 10.0.0.254 query batteryStatus
 ```
 Having grid info using the verbose mode with a 192.168.0.254 inverter with port 8900:
 ```bash
-python3 -m src.sermatec_inverter -v --port=8900 192.168.0.254 get gridPVStatus
+python3 -m src.sermatec_inverter -v --port=8900 192.168.0.254 query gridPVStatus
 ```
 
 ### *Newest version:* Source
