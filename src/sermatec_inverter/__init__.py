@@ -7,6 +7,10 @@ _LOGGER = logging.getLogger(__name__)
 
 class Sermatec:
 
+    QUERY_WRITE_TIMEOUT     = 10
+    QUERY_READ_TIMEOUT      = 20
+    QUERY_ATTEMPTS          = 3
+
     def __init__(self, host : str, port : int, protocolFilePath : str):
         self.host = host
         self.port = port
@@ -18,28 +22,38 @@ class Sermatec:
         if self.isConnected():
             dataToSend = self.parser.generateRequest(command)
             self.writer.write(dataToSend)
-            try:
-                await asyncio.wait_for(self.writer.drain(), timeout=10)
-            except asyncio.TimeoutError:
-                _LOGGER.error("Timeout when sending request to inverter.")
-                raise NoDataReceived()
 
-            try:
-                data = await asyncio.wait_for(self.reader.read(256), timeout=60)
-            except asyncio.TimeoutError:
-                _LOGGER.error("Timeout when waiting for response from the inverter.")
-                raise NoDataReceived()
+            for attempt in range(self.QUERY_ATTEMPTS):
+                _LOGGER.debug(f"Sending query, attempt {attempt + 1}/{self.QUERY_ATTEMPTS}")
+                try:
+                    await asyncio.wait_for(self.writer.drain(), timeout=self.QUERY_WRITE_TIMEOUT)
+                except asyncio.TimeoutError:
+                    _LOGGER.error(f"[{attempt + 1}/{self.QUERY_ATTEMPTS}] Timeout when sending request to inverter.")
+                    if attempt + 1 == self.QUERY_ATTEMPTS:
+                        raise NoDataReceived()
+                    continue                    
+                
+                try:
+                    data = await asyncio.wait_for(self.reader.read(256), timeout=self.QUERY_READ_TIMEOUT)
+                except asyncio.TimeoutError:
+                    _LOGGER.error(f"[{attempt + 1}/{self.QUERY_ATTEMPTS}] Timeout when waiting for response from the inverter.")
+                    if attempt + 1 == self.QUERY_ATTEMPTS:
+                        raise NoDataReceived()
+                    continue                  
 
-            _LOGGER.debug(f"Received data: { data.hex(' ', 1) }")
+                _LOGGER.debug(f"Received data: { data.hex(' ', 1) }")
 
-            if len(data) == 0:
-                _LOGGER.error(f"No data received when issued command {command}: connection closed by the inverter.")
-                self.connected = False
-                raise NoDataReceived()
-            
-            if not self.parser.checkResponseIntegrity(data, command):
-                _LOGGER.error(f"Command 0x{command:02x} response data malformed.")
-                raise FailedResponseIntegrityCheck()
+                if len(data) == 0:
+                    _LOGGER.error(f"No data received when issued command {command}: connection closed by the inverter.")
+                    self.connected = False
+                    raise NoDataReceived()
+                
+                if not self.parser.checkResponseIntegrity(data, command):
+                    _LOGGER.error(f"[{attempt + 1}/{self.QUERY_ATTEMPTS}] Command 0x{command:02x} response data malformed.")
+                    if attempt + 1 == self.QUERY_ATTEMPTS:
+                        raise FailedResponseIntegrityCheck()
+                else:
+                    break
 
             return data
                     
