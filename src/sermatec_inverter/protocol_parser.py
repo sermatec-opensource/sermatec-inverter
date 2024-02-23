@@ -50,10 +50,22 @@ class SermatecProtocolParser:
         else:
             return "unknown"
 
+    def __parseBatteryComStatus(self, value : int) -> str:
+        if value == 0x0000:
+            return "OK"
+        elif value == 0x0001:
+            return "Disconnected"
+        else:
+            return "Unknown"
+
     # Enquoting the SermatecProtocolParser type because it is a forward declaration (PEP 484).
     FIELD_PARSERS : dict[str, Callable[["SermatecProtocolParser", Any], Any]] = {
         "batteryStatus" : __parseBatteryStatus,
         "operatingMode" : __parseOperatingMode,
+    }
+
+    NAME_BASED_FIELD_PARSERS : dict[str, Callable[["SermatecProtocolParser", Any], Any]] = {
+        "battery_communication_connection_status" : __parseBatteryComStatus
     }
 
 
@@ -232,14 +244,21 @@ class SermatecProtocolParser:
                 newField["value"] = currentFieldData.hex()
             elif fieldType == "preserve":
                 ignoreField = True
+            elif fieldType == "long":
+                newField["value"] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = True) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
             else:
                 ignoreField = True
                 logger.warning(f"The provided field is of an unsuported type '{fieldType}'. Please contact developer.")
 
             # Some field have a meaning encoded to integers: trying to parse.
             if "parser" in field and field["parser"] in self.FIELD_PARSERS:
-                logger.debug("This field has a parser available, parsing.")
+                logger.debug("This field has an explicit parser available, parsing.")
                 newField["value"] = self.FIELD_PARSERS[field["parser"]](self, newField["value"])
+
+            # On some fields the parse key is missing, so using names for identification.
+            if fieldTag in self.NAME_BASED_FIELD_PARSERS:
+                logger.debug("This field has an name-based parser available, parsing.")
+                newField["value"] = self.NAME_BASED_FIELD_PARSERS[fieldTag](self, newField["value"])
 
             if not ignoreField:
                 parsedData[fieldTag] = newField
