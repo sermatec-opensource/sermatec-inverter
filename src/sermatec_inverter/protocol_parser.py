@@ -313,8 +313,8 @@ class SermatecProtocolParser:
 
         return True
 
-    def generateRequest(self, command : int) -> bytes:  
-        request : bytearray = bytearray([*self.REQ_SIGNATURE, *self.REQ_APP_ADDRESS, *self.REQ_INVERTER_ADDRESS, command, 0x00, 0x00])
+    def generateRequest(self, command : int, payload : bytearray) -> bytes:
+        request : bytearray = bytearray([*self.REQ_SIGNATURE, *self.REQ_APP_ADDRESS, *self.REQ_INVERTER_ADDRESS, command, 0x00, len(payload)]) + payload
         request += self.__calculateChecksum(request)
         request += self.REQ_FOOTER
 
