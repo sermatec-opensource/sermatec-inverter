@@ -18,9 +18,9 @@ class Sermatec:
         self.parser = protocol_parser.SermatecProtocolParser(protocolFilePath)
         self.pcuVersion = 0
     
-    async def __sendQuery(self, command : int) -> bytes:
+    async def __sendQuery(self, command : int, payload : bytearray = bytearray()) -> bytes:
         if self.isConnected():
-            dataToSend = self.parser.generateRequest(command)
+            dataToSend = self.parser.generateRequest(command, payload)
             self.writer.write(dataToSend)
 
             for attempt in range(self.QUERY_ATTEMPTS):
@@ -32,6 +32,10 @@ class Sermatec:
                     if attempt + 1 == self.QUERY_ATTEMPTS:
                         raise NoDataReceived()
                     continue                    
+                
+                # If we send non-empty payload, it is a control command => there will be no response.
+                if len(payload) > 0:
+                    return bytes()
                 
                 try:
                     data = await asyncio.wait_for(self.reader.read(256), timeout=self.QUERY_READ_TIMEOUT)
@@ -135,3 +139,31 @@ class Sermatec:
                 raise PCUVersionMalformed()
             
             return version
+        
+    async def getPowerState(self) -> bool:
+        if self.pcuVersion < 252:
+            _LOGGER.debug("Inverter version does not support power state query.")
+            raise NotSupportedByInverter()
+                
+        parsedData : dict = await self.query("runningStatus")
+
+        if not "inverter_switched_on" in parsedData:
+            _LOGGER.debug("Inverter version does not support power state query.")
+            raise NotSupportedByInverter()
+        else:
+            try:
+                state = bool(parsedData["inverter_switched_on"]["value"])
+            except ValueError:
+                _LOGGER.error("Can't parse power state!")
+                raise ResponseMalformed()
+
+            return state
+
+    async def setPowerState(self, state : bool) -> None:
+        if self.pcuVersion < 252:
+            _LOGGER.debug("Inverter version does not support power state setting.")
+            raise NotSupportedByInverter()
+        
+        payload = bytearray([0x55 if state else 0xaa])
+        data = await self.__sendQuery(0x64, payload)
+    
