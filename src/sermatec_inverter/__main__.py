@@ -7,7 +7,7 @@ from . import Sermatec
 from .protocol_parser import SermatecProtocolParser
 from .exceptions import *
 
-async def customgetFunc(**kwargs):
+async def customQueryFunc(**kwargs):
     """Query the inverter with a custom command.
 
     Keyword Args:
@@ -39,10 +39,10 @@ async def customgetFunc(**kwargs):
     data : str | dict = {}
 
     if kwargs["raw"]:
-        data = (await smc.getCustomRaw(parsedCmd)).hex(' ')
+        data = (await smc.queryCustomRaw(parsedCmd)).hex(' ')
     else:
         try:
-            data = await smc.getCustom(parsedCmd)
+            data = await smc.queryCustom(parsedCmd)
         except CommandNotFoundInProtocol:
             print("The command was not found in protocol for inverter's version, unable to parse. Try --raw to get raw bytes.")
         except (ProtocolFileMalformed, ParsingNotImplemented):
@@ -58,7 +58,7 @@ async def customgetFunc(**kwargs):
     await smc.disconnect()
     print("OK")
 
-async def getFunc(**kwargs):
+async def queryFunc(**kwargs):
     
     smc = Sermatec(kwargs["ip"], kwargs["port"], kwargs["protocolFilePath"])
     print(f"Connecting to Sermatec at {kwargs['ip']}:{kwargs['port']}...", end = "")
@@ -74,7 +74,7 @@ async def getFunc(**kwargs):
     data : dict = {}
 
     try:
-        data = await smc.get(kwargs["command"])
+        data = await smc.query(kwargs["command"])
     except CommandNotFoundInProtocol:
         print("The command was not found in protocol for inverter's version, unable to parse. Try --raw to get raw bytes.")
     except (ProtocolFileMalformed, ParsingNotImplemented):
@@ -105,26 +105,26 @@ if __name__ == "__main__":
     )
     
     subparsers = parser.add_subparsers(dest = "cmd")
-    getParser = subparsers.add_parser("get", help = "Get data from the inverter.")
-    getParser.set_defaults(cmdFunc = getFunc)
+    queryParser = subparsers.add_parser("query", help = "Query datasets from the inverter.")
+    queryParser.set_defaults(cmdFunc = queryFunc)
 
     cmdShortNames = SermatecProtocolParser.COMMAND_SHORT_NAMES.keys()
-    getParser.add_argument(
+    queryParser.add_argument(
         "command",
-        help = "A type of data to query.",
+        help = "A dataset to query.",
         choices = cmdShortNames,
     )
 
     setParser = subparsers.add_parser("set", help = "Configure a value in the inverter.")
     setParser.set_defaults(cmdFunc = setFunc)
 
-    customgetParser = subparsers.add_parser("customget", help = "Query the inverter using custom command.")
-    customgetParser.set_defaults(cmdFunc = customgetFunc)
-    customgetParser.add_argument(
+    customqueryParser = subparsers.add_parser("customquery", help = "Query the inverter using custom command.")
+    customqueryParser.set_defaults(cmdFunc = customQueryFunc)
+    customqueryParser.add_argument(
         "command",
         help = "A single-byte command to send.",
     )
-    customgetParser.add_argument(
+    customqueryParser.add_argument(
         "--raw",
         help = "Do not parse the response.",
         action = "store_true"

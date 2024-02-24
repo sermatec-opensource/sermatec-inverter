@@ -18,3 +18,9 @@ class ParsingNotImplemented(BaseException):
 
 class PCUVersionMalformed(BaseException):
     pass
+
+class NotSupportedByInverter(BaseException):
+    pass
+
+class ResponseMalformed(BaseException):
+    pass
