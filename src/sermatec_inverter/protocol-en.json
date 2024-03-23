@@ -79,7 +79,7 @@
                 "type": "int",
                 "name": "battery temperature",
                 "unitValue": "0.1",
-                "unitType": "C"
+                "unitType": "°C"
               },
               {
                 "order": 3,
@@ -343,7 +343,7 @@
                 "type": "uInt",
                 "name": "grid frequency",
                 "unitValue": "0.01",
-                "unitType": "HZ"
+                "unitType": "Hz"
               },
               {
                 "order": 22,
@@ -550,7 +550,7 @@
                 "type": "uInt",
                 "name": "backup voltage frequency",
                 "unitValue": "0.01",
-                "unitType": "HZ"
+                "unitType": "Hz"
               },
               {
                 "order": 49,
@@ -3745,7 +3745,7 @@
                 "type": "uInt",
                 "name": "grid frequency",
                 "unitValue": "0.01",
-                "unitType": "HZ"
+                "unitType": "Hz"
               },
               {
                 "order": 22,
@@ -3952,7 +3952,7 @@
                 "type": "uInt",
                 "name": "backup voltage frequency",
                 "unitValue": "0.01",
-                "unitType": "HZ"
+                "unitType": "Hz"
               },
               {
                 "order": 49,
