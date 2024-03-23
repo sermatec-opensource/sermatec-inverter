@@ -111,15 +111,15 @@ class Sermatec:
 # PCU version!
 # This is useful for Home Assistant integration.
 # ========================================================================
-    async def listSensors(self) -> list[dict]:
+    async def listSensors(self) -> dict:
         if not self.isConnected():
             _LOGGER.error("Can't list sensors: not connected.")
             raise NotConnected()
         
-        sensorList : list[dict] = []
+        sensorList : dict = {}
         # TODO: Use queryCommands from protocol.json instead of hardcoded array.
         for cmd in self.parser.ALL_QUERY_COMMANDS:
-            sensorList.append(self.parser.parseReply(cmd, self.pcuVersion, bytearray(), dryrun=True))
+            sensorList.update(self.parser.parseReply(cmd, self.pcuVersion, bytearray(), dryrun=True))
 
         return sensorList
 
