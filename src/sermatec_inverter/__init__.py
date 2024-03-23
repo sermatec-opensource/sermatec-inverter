@@ -8,9 +8,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class Sermatec:
 
-    QUERY_WRITE_TIMEOUT     = 10
-    QUERY_READ_TIMEOUT      = 20
-    QUERY_ATTEMPTS          = 3
+    QUERY_WRITE_TIMEOUT     = 5
+    QUERY_READ_TIMEOUT      = 5
+    QUERY_ATTEMPTS          = 5
 
     def __init__(self, host : str, port : int, protocolFilePath : str = None):
         if not protocolFilePath:
@@ -114,7 +114,7 @@ class Sermatec:
 # PCU version!
 # This is useful for Home Assistant integration.
 # ========================================================================
-    async def listSensors(self, pcuVersion : int = None) -> dict:
+    def listSensors(self, pcuVersion : int = None) -> dict:
         # If no specific pcuVersion specified, use (possibly) previously discovered.
         if not pcuVersion:
             pcuVersion = self.pcuVersion
@@ -125,7 +125,7 @@ class Sermatec:
 
         return sensorList
     
-    async def getQueryCommands(self, pcuVersion : int = None) -> dict:
+    def getQueryCommands(self, pcuVersion : int = None) -> dict:
         # If no specific pcuVersion specified, use (possibly) previously discovered.
         if not pcuVersion:
             pcuVersion = self.pcuVersion
