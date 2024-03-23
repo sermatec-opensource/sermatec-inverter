@@ -2,6 +2,7 @@ import logging
 import asyncio
 from . import protocol_parser
 from .exceptions import *
+from pathlib import Path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -11,7 +12,9 @@ class Sermatec:
     QUERY_READ_TIMEOUT      = 20
     QUERY_ATTEMPTS          = 3
 
-    def __init__(self, host : str, port : int, protocolFilePath : str):
+    def __init__(self, host : str, port : int, protocolFilePath : str = None):
+        if not protocolFilePath:
+            protocolFilePath = (Path(__file__).parent / "protocol-en.json").resolve()
         self.host = host
         self.port = port
         self.connected = False
@@ -155,3 +158,8 @@ class Sermatec:
                 raise PCUVersionMalformed()
             
             return version
+
+    async def getSerial(self) -> str:
+        parsedData : dict = await self.get("systemInformation")
+        serial : str = parsedData["product_sn"]["value"]
+        return serial
