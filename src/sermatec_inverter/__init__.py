@@ -2,16 +2,19 @@ import logging
 import asyncio
 from . import protocol_parser
 from .exceptions import *
+from pathlib import Path
 
 _LOGGER = logging.getLogger(__name__)
 
 class Sermatec:
 
-    QUERY_WRITE_TIMEOUT     = 10
-    QUERY_READ_TIMEOUT      = 20
-    QUERY_ATTEMPTS          = 3
+    QUERY_WRITE_TIMEOUT     = 5
+    QUERY_READ_TIMEOUT      = 5
+    QUERY_ATTEMPTS          = 5
 
-    def __init__(self, host : str, port : int, protocolFilePath : str):
+    def __init__(self, host : str, port : int, protocolFilePath : str = None):
+        if not protocolFilePath:
+            protocolFilePath = (Path(__file__).parent / "protocol-en.json").resolve()
         self.host = host
         self.port = port
         self.connected = False
@@ -104,8 +107,33 @@ class Sermatec:
             self.connected = False
 
 # ========================================================================
-# Query methods
+# Feature discovery methods
+# These methods do not communicate with inverter nor handle real data,
+# they are used to discover abilities, sensors and controls.
+# However, connection to the inverter is required to find out correct
+# PCU version!
+# This is useful for Home Assistant integration.
 # ========================================================================
+    def listSensors(self, pcuVersion : int = None) -> dict:
+        # If no specific pcuVersion specified, use (possibly) previously discovered.
+        if not pcuVersion:
+            pcuVersion = self.pcuVersion
+        
+        sensorList : dict = {}
+        for cmd in self.parser.getQueryCommands(pcuVersion):
+            sensorList.update(self.parser.parseReply(cmd, pcuVersion, bytearray(), dryrun=True))
+
+        return sensorList
+    
+    def getQueryCommands(self, pcuVersion : int = None) -> dict:
+        # If no specific pcuVersion specified, use (possibly) previously discovered.
+        if not pcuVersion:
+            pcuVersion = self.pcuVersion
+        
+        return self.parser.getQueryCommands(pcuVersion)
+# ========================================================================
+# Query methods
+# ========================================================================   
     async def getCustom(self, command : int) -> dict:
         data : bytes = await self.__sendQuery(command)
         parsedData : dict = self.parser.parseReply(command, self.pcuVersion, data)
@@ -135,3 +163,8 @@ class Sermatec:
                 raise PCUVersionMalformed()
             
             return version
+
+    async def getSerial(self) -> str:
+        parsedData : dict = await self.get("systemInformation")
+        serial : str = parsedData["product_sn"]["value"]
+        return serial
