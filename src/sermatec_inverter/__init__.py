@@ -104,8 +104,28 @@ class Sermatec:
             self.connected = False
 
 # ========================================================================
-# Query methods
+# Feature discovery methods
+# These methods do not communicate with inverter nor handle real data,
+# they are used to discover abilities, sensors and controls.
+# However, connection to the inverter is required to find out correct
+# PCU version!
+# This is useful for Home Assistant integration.
 # ========================================================================
+    async def listSensors(self) -> list[dict]:
+        if not self.isConnected():
+            _LOGGER.error("Can't list sensors: not connected.")
+            raise NotConnected()
+        
+        sensorList : list[dict] = []
+        # TODO: Use queryCommands from protocol.json instead of hardcoded array.
+        for cmd in self.parser.ALL_QUERY_COMMANDS:
+            sensorList.append(self.parser.parseReply(cmd, self.pcuVersion, bytearray(), dryrun=True))
+
+        return sensorList
+
+# ========================================================================
+# Query methods
+# ========================================================================   
     async def getCustom(self, command : int) -> dict:
         data : bytes = await self.__sendQuery(command)
         parsedData : dict = self.parser.parseReply(command, self.pcuVersion, data)
