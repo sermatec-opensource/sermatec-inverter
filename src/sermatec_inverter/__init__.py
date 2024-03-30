@@ -62,8 +62,9 @@ class Sermatec:
                     raise ConnectionResetError()
                 
                 if not self.parser.checkResponseIntegrity(data, command):
-                    _LOGGER.error(f"[{attempt + 1}/{self.QUERY_ATTEMPTS}] Command 0x{command:02x} response data malformed.")
+                    _LOGGER.debug(f"[{attempt + 1}/{self.QUERY_ATTEMPTS}] Command 0x{command:02x} response data malformed.")
                     if attempt + 1 == self.QUERY_ATTEMPTS:
+                        _LOGGER.error(f"Got malformed response after {self.QUERY_ATTEMPS} tries, command 0x{command:02x}.")
                         raise FailedResponseIntegrityCheck()
                 else:
                     break
@@ -87,7 +88,7 @@ class Sermatec:
             confut = asyncio.open_connection(host = self.host, port = self.port)
             try:
                 self.reader, self.writer = await asyncio.wait_for(confut, timeout = 3)
-            except asyncio.TimeoutError:
+            except (asyncio.TimeoutError, OSError):
                 _LOGGER.error("Couldn't connect to the inverter.")
                 self.connected = False
                 return False
