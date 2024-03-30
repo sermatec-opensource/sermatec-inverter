@@ -82,7 +82,7 @@ class Sermatec:
 # ========================================================================
 # Communications
 # ========================================================================
-    async def connect(self) -> bool:
+    async def connect(self, version = -1) -> bool:
         if not self.isConnected():
 
             confut = asyncio.open_connection(host = self.host, port = self.port)
@@ -93,16 +93,20 @@ class Sermatec:
                 self.connected = False
                 return False
             else:
-                version : int = 0
                 self.connected = True
 
-                try:
-                    version = await self.getPCUVersion()
-                except (NoDataReceived, FailedResponseIntegrityCheck, PCUVersionMalformed):
-                    _LOGGER.warning("Can't get PCU version! Using version 0, available parameters will be limited.")
+                # Get version only if not explicitly stated
+                if version == -1:
+                    try:
+                        version = await self.getPCUVersion()
+                    except (NoDataReceived, FailedResponseIntegrityCheck, PCUVersionMalformed):
+                        _LOGGER.warning("Can't get PCU version! Using version 0, available parameters will be limited.")
+                        self.pcuVersion = 0
+                    else:
+                        self.pcuVersion = version
+                        _LOGGER.info(f"Inverter's PCU version: {version}")
                 else:
                     self.pcuVersion = version
-                    _LOGGER.info(f"Inverter's PCU version: {version}")
                 
                 return True
         else:
