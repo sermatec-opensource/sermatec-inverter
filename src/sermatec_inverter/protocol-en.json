@@ -85,13 +85,17 @@
                 "order": 3,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "battery soc"
+                "name": "battery soc",
+                "unitType": "%",
+                "deviceClass": "BATTERY"
               },
               {
                 "order": 4,
                 "byteLen": 2,
                 "type": "int",
-                "name": "battery soh"
+                "name": "battery soh",
+                "unitType": "%",
+                "deviceClass": "BATTERY"
               },
               {
                 "order": 5,
@@ -350,7 +354,8 @@
                 "byteLen": 2,
                 "type": "int",
                 "name": "power factor",
-                "unitValue": "0.001"
+                "unitValue": "0.001",
+                "deviceClass": "POWER_FACTOR"
               },
               {
                 "order": 23,
@@ -478,7 +483,8 @@
                 "order": 39,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "work efficiency"
+                "name": "work efficiency",
+                "unitType": "%"
               },
               {
                 "order": 40,
@@ -1822,6 +1828,7 @@
                 "order": 2,
                 "byteLen": 2,
                 "type": "int",
+                "unitType": "W",
                 "name": "remote load"
               }
             ]
@@ -1940,6 +1947,7 @@
                 "order": 6,
                 "byteLen": 2,
                 "type": "int",
+                "unitType": "W",
                 "name": "remote load"
               }
             ]
@@ -3880,7 +3888,8 @@
                 "order": 39,
                 "byteLen": 2,
                 "type": "uInt",
-                "name": "work efficiency"
+                "name": "work efficiency",
+                "unitType": "%"
               },
               {
                 "order": 40,
