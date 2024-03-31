@@ -3,6 +3,7 @@ import json
 import re
 from typing import Any, Callable
 from .exceptions import *
+from pathlib import Path
 
 # Local module logger.
 logger = logging.getLogger(__name__)
@@ -140,14 +141,19 @@ class SermatecProtocolParser:
     }
 
 
-    def __init__(self, path : str):
-        with open(path, "r") as protocolFile:
+    def __init__(self, protocolPath : str, languageFilePath : Path):
+        with open(protocolPath, "r") as protocolFile:
             protocolData = json.load(protocolFile)
             try:
                 self.osim = protocolData["osim"]
             except KeyError:
                 logger.error("Protocol file malformed, 'osim' key not found.")
                 raise ProtocolFileMalformed()
+        self.translations = {}
+        with languageFilePath.open("r") as langFile:
+            for line in langFile.readlines():
+                splitLine = line.split(";")
+                self.translations[splitLine[0]] = splitLine[1]
             
     def getCommandCodeFromName(self, commandName : str) -> int:
         if commandName in self.COMMAND_SHORT_NAMES:
@@ -275,8 +281,11 @@ class SermatecProtocolParser:
                     logger.error("Field is of a type 'bitRange' but is missing key 'fromBit' or 'endBit'.")
                     raise ProtocolFileMalformed()
 
+            if field["name"] in self.translations:
+                fieldName = self.translations[field["name"]]
+            else:
+                fieldName = field["name"]
 
-            fieldName = field["name"]
             fieldTag = re.sub(r"[^A-Za-z0-9]", "_", field["name"]).lower()
             logger.debug(f"Created tag from name: {fieldTag}")
 
