@@ -18,7 +18,7 @@ class Sermatec:
         if not protocolFilePath:
             protocolFilePath = (Path(__file__).parent / "protocol-en.json").resolve()
 
-        if not self.LANG_FILES_FOLDER.FOLDER.exists():
+        if not self.LANG_FILES_FOLDER.exists():
             raise FileNotFoundError("Translation folder not found!")
         
         lang_file_path = self.LANG_FILES_FOLDER / f"{language}.csv"
