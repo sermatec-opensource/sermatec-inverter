@@ -152,8 +152,10 @@ class SermatecProtocolParser:
         self.translations = {}
         with languageFilePath.open("r") as langFile:
             for line in langFile.readlines():
-                splitLine = line.split(";")
-                self.translations[splitLine[0]] = splitLine[1]
+                splitLine = line.replace("\"", "").replace("\n", "").split(";")
+                original_name = splitLine[0]
+                translated_name = splitLine[1]
+                self.translations[original_name] = translated_name
             
     def getCommandCodeFromName(self, commandName : str) -> int:
         if commandName in self.COMMAND_SHORT_NAMES:
@@ -280,11 +282,15 @@ class SermatecProtocolParser:
                 else:
                     logger.error("Field is of a type 'bitRange' but is missing key 'fromBit' or 'endBit'.")
                     raise ProtocolFileMalformed()
+            
+            newField = {}
 
             if field["name"] in self.translations:
                 fieldName = self.translations[field["name"]]
             else:
                 fieldName = field["name"]
+
+            newField["name"] = fieldName
 
             fieldTag = re.sub(r"[^A-Za-z0-9]", "_", field["name"]).lower()
             logger.debug(f"Created tag from name: {fieldTag}")
@@ -300,7 +306,6 @@ class SermatecProtocolParser:
                 fieldMultiplier : float = 1
                 logger.debug(f"Field {fieldName} has not 'unitValue' key, using 1 as a default multiplier.")          
             
-            newField = {}
 
             if "unitType" in field:
                 logger.debug(f"Field has a unit: {field['unitType']}")
@@ -330,8 +335,6 @@ class SermatecProtocolParser:
             if not dryrun:
                 currentFieldData = reply[ replyPosition : (replyPosition + fieldLength) ]
                 logger.debug(f"Parsing field data: {currentFieldData.hex(' ')}")
-
-                newField : dict = {}
                 
                 if fieldType == "int":
                     newField["value"] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = True) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
