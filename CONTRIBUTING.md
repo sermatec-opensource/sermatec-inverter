@@ -21,4 +21,4 @@ If you do not know Python or you do not want to contribute any code, you can hel
 You are always welcome to contribute new features. Please open an issue so others know you are working on the problem, fork the project, create a branch with a descriptive name and after your code is ready, open a pull request. Please describe the changes well in the pull request, so it can be merged as soon as possible.
 
 ## Translating field names
-If your preffered language is not supported, do not worry, adding support is very easy. Just copy the English translation file (`en.csv` in `src/sermatec_inverter/translations` folder), name the new file according to [ISO 639 two-letter code](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes) and translate values in the second column!
+If your preferred language is not supported, do not worry, adding support is very easy. Just copy the English translation file (`en.csv` in `src/sermatec_inverter/translations` folder), name the new file according to [ISO 639 two-letter code](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes) and translate values in the second column!
