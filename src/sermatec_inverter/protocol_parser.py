@@ -285,16 +285,15 @@ class SermatecProtocolParser:
             
             newField = {}
 
+            fieldTag = re.sub(r"[^A-Za-z0-9]", "_", field["name"]).lower()
+            logger.debug(f"Created tag from name: {fieldTag}")
+
             if field["name"] in self.translations:
                 fieldName = self.translations[field["name"]]
             else:
                 fieldName = field["name"]
 
             newField["name"] = fieldName
-
-            fieldTag = re.sub(r"[^A-Za-z0-9]", "_", field["name"]).lower()
-            logger.debug(f"Created tag from name: {fieldTag}")
-
 
             if "unitValue" in field:
                 try:
