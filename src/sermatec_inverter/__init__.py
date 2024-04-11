@@ -43,7 +43,7 @@ class Sermatec:
                 except asyncio.TimeoutError:
                     _LOGGER.debug(f"[{attempt + 1}/{self.QUERY_ATTEMPTS}] Timeout when sending request to inverter.")
                     if attempt + 1 == self.QUERY_ATTEMPTS:
-                        _LOGGER.error(f"Timeout when sending request to inverter after {self.QUERY_ATTEMPS} tries.")
+                        _LOGGER.error(f"Timeout when sending request to inverter after {self.QUERY_ATTEMPTS} tries.")
                         raise NoDataReceived()
                     continue
                 except ConnectionResetError:
@@ -56,7 +56,7 @@ class Sermatec:
                 except asyncio.TimeoutError:
                     _LOGGER.debug(f"[{attempt + 1}/{self.QUERY_ATTEMPTS}] Timeout when waiting for response from the inverter.")
                     if attempt + 1 == self.QUERY_ATTEMPTS:
-                        _LOGGER.error(f"Timeout when waiting for response from the inverter after {self.QUERY_ATTEMPS} tries.")
+                        _LOGGER.error(f"Timeout when waiting for response from the inverter after {self.QUERY_ATTEMPTS} tries.")
                         raise NoDataReceived()
                     continue
                 except ConnectionResetError:
@@ -74,7 +74,7 @@ class Sermatec:
                 if not self.parser.checkResponseIntegrity(data, command):
                     _LOGGER.debug(f"[{attempt + 1}/{self.QUERY_ATTEMPTS}] Command 0x{command:02x} response data malformed.")
                     if attempt + 1 == self.QUERY_ATTEMPTS:
-                        _LOGGER.error(f"Got malformed response after {self.QUERY_ATTEMPS} tries, command 0x{command:02x}.")
+                        _LOGGER.error(f"Got malformed response after {self.QUERY_ATTEMPTS} tries, command 0x{command:02x}.")
                         raise FailedResponseIntegrityCheck()
                 else:
                     break
@@ -146,10 +146,27 @@ class Sermatec:
         
         sensorList : dict = {}
         for cmd in self.parser.getQueryCommands(pcuVersion):
-            sensorList.update(self.parser.parseReply(cmd, pcuVersion, bytearray(), dryrun=True))
+            for key, field in self.parser.parseReply(cmd, pcuVersion, bytearray(), dryrun=True).items():
+                if "unit" in field and field["unit"] == "binary":
+                    continue
+                else:
+                    sensorList.update({key: field})
 
         return sensorList
     
+    def listBinarySensors(self, pcuVersion : int = None) -> dict:
+        # If no specific pcuVersion specified, use (possibly) previously discovered.
+        if not pcuVersion:
+            pcuVersion = self.pcuVersion
+        
+        sensorList : dict = {}
+        for cmd in self.parser.getQueryCommands(pcuVersion):
+            for key, field in self.parser.parseReply(cmd, pcuVersion, bytearray(), dryrun=True).items():
+                if "unit" in field and field["unit"] == "binary":
+                    sensorList.update({key: field})
+
+        return sensorList
+
     def getQueryCommands(self, pcuVersion : int = None) -> dict:
         # If no specific pcuVersion specified, use (possibly) previously discovered.
         if not pcuVersion:

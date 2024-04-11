@@ -285,16 +285,15 @@ class SermatecProtocolParser:
             
             newField = {}
 
+            fieldTag = re.sub(r"[^A-Za-z0-9]", "_", field["name"]).lower()
+            logger.debug(f"Created tag from name: {fieldTag}")
+
             if field["name"] in self.translations:
                 fieldName = self.translations[field["name"]]
             else:
                 fieldName = field["name"]
 
             newField["name"] = fieldName
-
-            fieldTag = re.sub(r"[^A-Za-z0-9]", "_", field["name"]).lower()
-            logger.debug(f"Created tag from name: {fieldTag}")
-
 
             if "unitValue" in field:
                 try:
@@ -358,7 +357,7 @@ class SermatecProtocolParser:
                     newField["value"] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = True) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
                 else:
                     ignoreField = True
-                    logger.warning(f"The provided field is of an unsuported type '{fieldType}'. Please contact developer.")
+                    logger.info(f"The provided field is of an unsuported type '{fieldType}'.")
 
                 # Some field have a meaning encoded to integers: trying to parse.
                 if "parser" in field and field["parser"] in self.FIELD_PARSERS:
@@ -369,6 +368,12 @@ class SermatecProtocolParser:
                 if fieldTag in self.NAME_BASED_FIELD_PARSERS:
                     logger.debug("This field has an name-based parser available, parsing.")
                     newField["value"] = self.NAME_BASED_FIELD_PARSERS[fieldTag](self, newField["value"])
+
+            # Fields with "repeat" are not supported for now, skipping.
+            if "repeat" in field:
+                fieldLength *= int(field["repeat"])
+                ignoreField = True
+                logger.info("Fields with 'repeat' are not supported, skipping...")
 
             if not ignoreField:
                 parsedData[fieldTag] = newField
