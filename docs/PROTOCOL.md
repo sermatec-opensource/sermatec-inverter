@@ -146,9 +146,9 @@ Battery states:
 | 48-49                    | 2 bytes  | Grid reactive power.      | signed int16                              |
 | 50-51                    | 2 bytes  | Grid apparent power.      | signed int16                              |
 | 52-69                    | 16 bytes | ??                        | ??                                        |
- | 70-71                    | 2 bytes  | Device Type Code          | unsigned int16                            |
- | 72-73                    | 2 bytes  | DSP Version High          | unsigned int16                            |
- | 74-75                    | 2 bytes  | DSP Version Low           | unsigned int16                            |
+| 70-71                    | 2 bytes  | Device Type Code          | unsigned int16                            |
+| 72-73                    | 2 bytes  | DSP Version High          | unsigned int16                            |
+| 74-75                    | 2 bytes  | DSP Version Low           | unsigned int16                            |
 | 90-91                    | 2 bytes  | Load Phase A voltage.     | unsigned int16 fractional (scaling 1/10)  |
 | 92-93                    | 2 bytes  | Load Phase B voltage.     | unsigned int16 fractional (scaling 1/10)  |
 | 94-95                    | 2 bytes  | Load Phase C voltage.     | unsigned int16 fractional (scaling 1/10)  |
