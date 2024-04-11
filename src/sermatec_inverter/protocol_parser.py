@@ -161,8 +161,7 @@ class SermatecProtocolParser:
         "dc_side_battery_type": __parseBatteryType,
         "meter_communication_protocol_selection": __parseMeterProtocol,
         "meter_detection_function": __parseEEBinarySensor,
-        "three_phase_unbalanced_output": __parseEEBinarySensor,
-        "protocol_version_number": __parseProtocolVersion
+        "three_phase_unbalanced_output": __parseEEBinarySensor
     }
 
 
