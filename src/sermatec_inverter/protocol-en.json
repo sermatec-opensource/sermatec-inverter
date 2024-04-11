@@ -588,7 +588,8 @@
                 "byteLen": 2,
                 "type": "int",
                 "name": "backup power factor",
-                "unitValue": "0.001"
+                "unitValue": "0.001",
+                "deviceClass": "POWER_FACTOR"
               },
               {
                 "order": 53,
@@ -951,7 +952,8 @@
                 "tag": "refluxs",
                 "name": "anti-backflow function",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
-                "validate": "enumStr(ee00,00ee,0000)"
+                "validate": "enumStr(ee00,00ee,0000)",
+                "unitType": "binary"
               },
               {
                 "order": 10,
@@ -1473,7 +1475,8 @@
                 "type": "hex",
                 "tag": "refluxs",
                 "converter": "map(ee00:1, 00ee:2, default:0)",
-                "name": "anti-backflow function"
+                "name": "anti-backflow function",
+                "unitType": "binary"
               },
               {
                 "order": 10,
@@ -1778,7 +1781,8 @@
                 "tag": "refluxs",
                 "name": "anti-backflow function",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
-                "validate": "enumStr(ee00,00ee,0000)"
+                "validate": "enumStr(ee00,00ee,0000)",
+                "unitType": "binary"
               },
               {
                 "order": 10,
@@ -1904,7 +1908,8 @@
                 "name": "Meter detection function",
                 "tag": "meterMonitor",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
-                "validate": "enumStr(ee00,00ee,0000)"
+                "validate": "enumStr(ee00,00ee,0000)",
+                "unitType": "binary"
               },
               {
                 "order": 1,
@@ -1913,7 +1918,8 @@
                 "name": "Three-phase unbalanced output",
                 "tag": "threePhase",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
-                "validate": "enumStr(ee00,00ee,0000)"
+                "validate": "enumStr(ee00,00ee,0000)",
+                "unitType": "binary"
               },
               {
                 "order": 2,
@@ -2152,7 +2158,8 @@
                 "type": "hex",
                 "tag": "refluxs",
                 "converter": "map(ee00:1, 00ee:2, default:0)",
-                "name": "anti-backflow function"
+                "name": "anti-backflow function",
+                "unitType": "binary"
               },
               {
                 "order": 10,
@@ -2213,7 +2220,8 @@
                 "type": "hex",
                 "tag": "meterMonitor",
                 "converter": "map(ee00:1, 00ee:2, default:0)",
-                "name": "Meter detection function"
+                "name": "Meter detection function",
+                "unitType": "binary"
               },
               {
                 "order": 17,
@@ -2221,7 +2229,8 @@
                 "type": "hex",
                 "tag": "threePhase",
                 "converter": "map(ee00:1, 00ee:2, default:0)",
-                "name": "Three-phase unbalanced output"
+                "name": "Three-phase unbalanced output",
+                "unitType": "binary"
               },
               {
                 "order": 18,
@@ -2348,7 +2357,8 @@
                 "name": "Meter detection function",
                 "tag": "meterMonitor",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
-                "validate": "enumStr(ee00,00ee,0000)"
+                "validate": "enumStr(ee00,00ee,0000)",
+                "unitType": "binary"
               },
               {
                 "order": 1,
@@ -2357,7 +2367,8 @@
                 "name": "Three-phase unbalanced output",
                 "tag": "threePhase",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
-                "validate": "enumStr(ee00,00ee,0000)"
+                "validate": "enumStr(ee00,00ee,0000)",
+                "unitType": "binary"
               },
               {
                 "order": 2,
@@ -2468,7 +2479,8 @@
                 "type": "hex",
                 "tag": "refluxs",
                 "converter": "map(ee00:1, 00ee:2, default:0)",
-                "name": "anti-backflow function"
+                "name": "anti-backflow function",
+                "unitType": "binary"
               },
               {
                 "order": 10,
@@ -2531,7 +2543,8 @@
                 "type": "int",
                 "tag": "powerFactor",
                 "name": "power factor setting",
-                "unitValue": "0.001"
+                "unitValue": "0.001",
+                "deviceClass": "POWER_FACTOR"
               },
               {
                 "order": 17,
@@ -2630,7 +2643,8 @@
                 "type": "hex",
                 "tag": "meterMonitor",
                 "converter": "map(ee00:1, 00ee:2, default:0)",
-                "name": "Meter detection function"
+                "name": "Meter detection function",
+                "unitType": "binary"
               },
               {
                 "order": 1,
@@ -2638,7 +2652,8 @@
                 "type": "hex",
                 "tag": "threePhase",
                 "converter": "map(ee00:1, 00ee:2, default:0)",
-                "name": "Three-phase unbalanced output"
+                "name": "Three-phase unbalanced output",
+                "unitType": "binary"
               },
               {
                 "order": 2,
@@ -2672,7 +2687,8 @@
                 "name": "Meter detection function",
                 "tag": "meterMonitor",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
-                "validate": "enumStr(ee00,00ee,0000)"
+                "validate": "enumStr(ee00,00ee,0000)",
+                "unitType": "binary"
               },
               {
                 "order": 1,
@@ -2681,7 +2697,8 @@
                 "name": "Three-phase unbalanced output",
                 "tag": "threePhase",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
-                "validate": "enumStr(ee00,00ee,0000)"
+                "validate": "enumStr(ee00,00ee,0000)",
+                "unitType": "binary"
               },
               {
                 "order": 2,
@@ -3453,7 +3470,8 @@
                 "type": "hex",
                 "name": "Meter detection function",
                 "tag": "meterMonitor",
-                "converter": "map(ee00:1, 00ee:2, default:0)"
+                "converter": "map(ee00:1, 00ee:2, default:0)",
+                "unitType": "binary"
               },
               {
                 "order": 1,
@@ -3461,7 +3479,8 @@
                 "type": "hex",
                 "name": "Three-phase unbalanced output",
                 "tag": "threePhase",
-                "converter": "map(ee00:1, 00ee:2, default:0)"
+                "converter": "map(ee00:1, 00ee:2, default:0)",
+                "unitType": "binary"
               },
               {
                 "order": 2,
@@ -3816,7 +3835,8 @@
                 "byteLen": 2,
                 "type": "int",
                 "name": "power factor",
-                "unitValue": "0.001"
+                "unitValue": "0.001",
+                "deviceClass": "POWER_FACTOR"
               },
               {
                 "order": 23,
@@ -4048,7 +4068,8 @@
                 "byteLen": 2,
                 "type": "int",
                 "name": "backup power factor",
-                "unitValue": "0.001"
+                "unitValue": "0.001",
+                "deviceClass": "POWER_FACTOR"
               },
               {
                 "order": 53,
@@ -4295,7 +4316,8 @@
                 "type": "int",
                 "tag": "powerFactor",
                 "name": "power factor setting",
-                "unitValue": "0.001"
+                "unitValue": "0.001",
+                "deviceClass": "POWER_FACTOR"
               },
               {
                 "order": 1,
@@ -4323,7 +4345,8 @@
                 "name": "Meter detection function",
                 "tag": "meterMonitor",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
-                "validate": "enumStr(ee00,00ee,0000)"
+                "validate": "enumStr(ee00,00ee,0000)",
+                "unitType": "binary"
               },
               {
                 "order": 1,
@@ -4332,7 +4355,8 @@
                 "name": "Three-phase unbalanced output",
                 "tag": "threePhase",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
-                "validate": "enumStr(ee00,00ee,0000)"
+                "validate": "enumStr(ee00,00ee,0000)",
+                "unitType": "binary"
               },
               {
                 "order": 2,
@@ -4520,7 +4544,8 @@
                 "type": "hex",
                 "name": "Meter detection function",
                 "tag": "meterMonitor",
-                "converter": "map(ee00:1, 00ee:2, default:0)"
+                "converter": "map(ee00:1, 00ee:2, default:0)",
+                "unitType": "binary"
               },
               {
                 "order": 1,
@@ -4528,7 +4553,8 @@
                 "type": "hex",
                 "name": "Three-phase unbalanced output",
                 "tag": "threePhase",
-                "converter": "map(ee00:1, 00ee:2, default:0)"
+                "converter": "map(ee00:1, 00ee:2, default:0)",
+                "unitType": "binary"
               },
               {
                 "order": 2,
