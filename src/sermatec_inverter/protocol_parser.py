@@ -17,6 +17,17 @@ class SermatecProtocolParser:
     REQ_INVERTER_ADDRESS    = bytes([0x14])
     REQ_FOOTER              = bytes([0xae])
 
+    @staticmethod
+    def getResponseCommands(command : int) -> list[int]:
+        responseCommands = {
+            0x95: [0x95, 0x9D]
+        }
+
+        # Usually a single response is returned to a command,
+        # hence the default value.
+        return responseCommands.get(command, [command])
+
+
     COMMAND_SHORT_NAMES : dict = {
         "systemInformation"   : 0x98,
         "batteryStatus"       : 0x0a,
