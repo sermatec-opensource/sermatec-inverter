@@ -381,7 +381,7 @@ class SermatecProtocolParser:
                 elif fieldType == "hex":
                     newField["value"] =  int.from_bytes(currentFieldData, byteorder = "big", signed = False)
                 elif fieldType == "preserve":
-                    ignoreField = True
+                    pass
                 elif fieldType == "long":
                     newField["value"] = round(int.from_bytes(currentFieldData, byteorder = "big", signed = True) * fieldMultiplier, self.__getMultiplierDecimalPlaces(fieldMultiplier))
                 else:
@@ -402,7 +402,10 @@ class SermatecProtocolParser:
             if "repeat" in field:
                 fieldLength *= int(field["repeat"])
                 ignoreField = True
-                logger.info("Fields with 'repeat' are not supported, skipping...")
+                logger.debug("Fields with 'repeat' are not supported, skipping...")
+
+            if fieldType == "preserve":
+                ignoreField = True
 
             newField["listIgnore"] = field.get("listIgnore", False)
 
