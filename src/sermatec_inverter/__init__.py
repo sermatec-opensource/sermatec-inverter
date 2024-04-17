@@ -3,6 +3,7 @@ import asyncio
 from . import protocol_parser
 from .exceptions import *
 from pathlib import Path
+from collections.abc import Callable
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +85,7 @@ class Sermatec:
         
         return responseData
 
-    async def __sendQuery(self, command : int) -> list[bytes]:
+    async def __sendQuery(self, command : int, payload : bytes = bytes()) -> list[bytes]:
         """Send a query to inverter using specified command code using multiple attempts.
         The connection to the inverter must exist already.
 
@@ -100,7 +101,7 @@ class Sermatec:
             NotConnected: If the function is called when no connection to the inverter exist.
         """
         if self.isConnected():
-            dataToSend      = self.parser.generateRequest(command)
+            dataToSend      = self.parser.generateRequest(command, payload)
             responsesCount  = len(self.parser.getResponseCommands(command))
             for attempt in range(self.QUERY_ATTEMPTS):
                 try:
@@ -216,6 +217,7 @@ class Sermatec:
             pcuVersion = self.pcuVersion
         
         return self.parser.getQueryCommands(pcuVersion)
+
 # ========================================================================
 # Query methods
 # ========================================================================   
@@ -317,3 +319,50 @@ class Sermatec:
         parsedData : dict = await self.get("systemInformation")
         serial : str = parsedData["product_sn"]["value"]
         return serial
+    
+    async def getParameterData(self) -> dict:
+        parsedResponse = {}
+        for commandCode in self.parser.ALL_PARAMETER_QUERY_COMMANDS:
+            responses      = await self.__sendQuery(commandCode)
+            responseCodes  = self.parser.getResponseCommands(commandCode)
+            for response, responseCode in zip(responses, responseCodes):
+                parsedResponse.update(self.parser.parseParameterReply(responseCode, self.pcuVersion, response))
+            
+        return parsedResponse
+
+# ========================================================================
+# Set methods
+# ========================================================================
+    async def set(self, tag : str, value : bool | int | str, previousData : dict = {}) -> None:
+        """
+
+        Args:
+            
+        Returns:
+            
+        Raises:
+            MissingTaggedData: If not enough data was supplied to build payload.
+            CommandNotFoundInProtocol: The requested command is not available.
+            ParameterNotFound: This parameter is not supported.
+        """    
+        
+        taggedDataToSend = previousData
+
+        # This may throw ParameterNotFound.    
+        parameterInfo = self.parser.getParameterInfo(tag)
+        
+        convertedValue = int.to_bytes(parameterInfo.converter.fromFriendly(value), byteorder="big", signed=False, length = parameterInfo.byteLength)
+        taggedDataToSend[tag] = convertedValue
+        _LOGGER.debug(f"Setting up tag '{tag}' with value '{convertedValue}'")
+
+        if parameterInfo.command == 0x66:
+            payload = self.parser.build66Payload(taggedDataToSend)
+        elif parameterInfo.command == 0x64:
+            payload = self.parser.build64Payload(taggedDataToSend)
+        else:
+            raise CommandNotFoundInProtocol
+        
+        _LOGGER.debug(f"Query payload: {payload.hex(' ')}")
+
+        await self.__sendQuery(parameterInfo.command, payload)
+        
