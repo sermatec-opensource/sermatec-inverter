@@ -372,7 +372,7 @@
                 "type": "int",
                 "name": "grid reactive power",
                 "unitValue": "1",
-                "unitType": "W"
+                "unitType": "VAr"
               },
               {
                 "order": 25,
@@ -380,7 +380,7 @@
                 "type": "int",
                 "name": "grid apparent power",
                 "unitValue": "1",
-                "unitType": "var"
+                "unitType": "VA"
               },
               {
                 "order": 26,
@@ -597,7 +597,7 @@
                 "type": "int",
                 "name": "backup active power",
                 "unitValue": "1",
-                "unitType": "VA"
+                "unitType": "W"
               },
               {
                 "order": 54,
@@ -605,7 +605,7 @@
                 "type": "int",
                 "name": "backup reactive power",
                 "unitValue": "1",
-                "unitType": "var"
+                "unitType": "VAr"
               },
               {
                 "order": 55,
@@ -613,7 +613,7 @@
                 "type": "int",
                 "name": "backup apparent power",
                 "unitValue": "1",
-                "unitType": "W"
+                "unitType": "VA"
               }
             ]
           },
@@ -3852,7 +3852,7 @@
                 "type": "int",
                 "name": "grid reactive power",
                 "unitValue": "1",
-                "unitType": "W"
+                "unitType": "VAr"
               },
               {
                 "order": 25,
@@ -3860,7 +3860,7 @@
                 "type": "int",
                 "name": "grid apparent power",
                 "unitValue": "1",
-                "unitType": "var"
+                "unitType": "VA"
               },
               {
                 "order": 26,
@@ -4085,7 +4085,7 @@
                 "type": "int",
                 "name": "backup reactive power",
                 "unitValue": "1",
-                "unitType": "var"
+                "unitType": "VAr"
               },
               {
                 "order": 55,
