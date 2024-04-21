@@ -174,30 +174,41 @@ class SermatecProtocolParser:
 
 
     class SermatecParameter:
-        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type):
+        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool):
             # Parameter friendlyType is used to signalize in what type the friendly value is expected, useful mainly for terminal UI,
             # where everything is passed as string by default
-            self.command    = command
-            self.byteLength = byteLength
-            self.converter  = converter
-            self.validator  = validator
-            self.friendlyType = friendlyType
+            self.command        = command
+            self.byteLength     = byteLength
+            self.converter      = converter
+            self.validator      = validator
+            self.friendlyType   = friendlyType
+            self.shouldBeOff    = shouldBeOff
 
     SERMATEC_PARAMETERS = {
         "onOff" : SermatecParameter(
-            command   = 0x64,
-            byteLength= 1,
-            converter = __CONVERTER_ON_OFF,
-            validator = EnumValidator([0x55, 0xaa]),
-            friendlyType = int
+            command      = 0x64,
+            byteLength   = 1,
+            converter    = __CONVERTER_ON_OFF,
+            validator    = EnumValidator([0x55, 0xaa]),
+            friendlyType = int,
+            shouldBeOff  = False
 
         ),
         "operatingMode" : SermatecParameter(
-            command   = 0x66,
-            byteLength= 2,
-            converter = __CONVERTER_OPERATING_MODE,
-            validator = EnumValidator([0x1, 0x2, 0x3, 0x4, 0x5]),
-            friendlyType = str
+            command      = 0x66,
+            byteLength   = 2,
+            converter    = __CONVERTER_OPERATING_MODE,
+            validator    = EnumValidator([0x1, 0x2, 0x3, 0x4, 0x5]),
+            friendlyType = str,
+            shouldBeOff  = False
+        ),
+        "antiBackflow" : SermatecParameter(
+            command      = 0x66,
+            byteLength   = 2,
+            converter    = __CONVERTER_EE_BINARY,
+            validator    = EnumValidator([0xee00, 0x00ee]),
+            friendlyType = int,
+            shouldBeOff  = True
         )
     }
 
@@ -341,9 +352,24 @@ class SermatecProtocolParser:
                 logger.error("Field length is zero or negative.")
                 raise ProtocolFileMalformed()
 
-            fieldType = field["type"]            
+            fieldType = field["type"]                           
             rawFieldData = reply[ replyPosition : (replyPosition + fieldLength) ]
-            logger.debug(f"Storing raw field data: {rawFieldData.hex(' ')}")
+
+            # This is used only for the onOff tag. Others are integers.
+            if fieldType == "bit":
+                if "bitPosition" in field:
+                    fieldBitPosition = field["bitPosition"]
+                else:
+                    logger.error("Field is of a type 'bit', but is missing key 'bitPosition'.")
+                    raise ProtocolFileMalformed()
+                convertedBytes = int.from_bytes(rawFieldData, byteorder = "big", signed = False)
+                extractedBit   = bool(convertedBytes & (1 << fieldBitPosition))
+                
+                if "tag" in field and field["tag"] == "onOff":
+                    logger.debug("Detected type bit, tag onOff. Converting.")
+                    rawFieldData = self.__CONVERTER_ON_OFF.fromFriendly(extractedBit).to_bytes(byteorder = "big", signed = False)
+                
+            logger.debug(f"Storing raw field data: {rawFieldData}")
 
             # Fields with "repeat" are not supported for now, skipping.
             if "repeat" in field:
@@ -631,7 +657,7 @@ class SermatecProtocolParser:
             payload.extend(taggedData["operatingMode"])
             payload.extend(taggedData["gridSwitch"])
             payload.extend(taggedData["adjustMethod"])
-            payload.extend(taggedData["refluxs"])
+            payload.extend(taggedData["antiBackflow"])
             payload.extend(taggedData["batteryCharge"])
             payload.extend(taggedData["soc"])
             # Zeroes for "How many sets of data are there" field.
@@ -661,6 +687,10 @@ class SermatecProtocolParser:
             raise MissingTaggedData()
         
         return payload
+    
+    def isInverterOff(self, value : bytes) -> bool:
+        """Check whether the provided value corresponds to off state."""
+        return value == bytes([0xaa])
 
 if __name__ == "__main__":
     logging.basicConfig(level = "DEBUG")

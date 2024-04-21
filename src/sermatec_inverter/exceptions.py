@@ -36,3 +36,6 @@ class ParameterNotFound(BaseException):
 
 class MissingTaggedData(BaseException):
     pass
+
+class InverterIsNotOff(BaseException):
+    pass

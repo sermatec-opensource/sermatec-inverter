@@ -345,9 +345,11 @@ class Sermatec:
             CommandNotFoundInProtocol: The requested command is not available.
             ParameterNotFound: This parameter is not supported.
             ValueError: If supplied value is invalid.
-        """    
+            InverterIsNotOff: If the inverter should be off to set this value.
+        """
         
         taggedDataToSend = previousData
+        _LOGGER.debug(f"Provided previous data: {taggedDataToSend}")
 
         # This may throw ParameterNotFound.    
         parameterInfo = self.parser.getParameterInfo(tag)
@@ -359,6 +361,14 @@ class Sermatec:
             raise ValueError
 
         taggedDataToSend[tag] = int.to_bytes(convertedValue, byteorder="big", signed=False, length = parameterInfo.byteLength)
+
+        if parameterInfo.shouldBeOff:
+            if "onOff" not in previousData:
+                _LOGGER.debug("The inverter should be off to set the value, but no 'onOff' state supplied!")
+                raise MissingTaggedData()
+            elif not self.parser.isInverterOff(previousData["onOff"]):
+                _LOGGER.debug("The inverter has to be off to set this value, but it is on.")
+                raise InverterIsNotOff()
 
         if parameterInfo.command == 0x66:
             payload = self.parser.build66Payload(taggedDataToSend)

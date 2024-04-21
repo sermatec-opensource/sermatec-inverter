@@ -124,6 +124,8 @@ async def setFunc(**kwargs):
         print("This parameter is not supported.")
     except (ValueError):
         print("Supplied value is not valid.")
+    except (InverterIsNotOff):
+        print("Inverter has to be turned off to set this value! Please turn off the inverter.")
     else:
         print("OK!")
 
