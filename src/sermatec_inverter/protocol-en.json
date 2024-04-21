@@ -925,7 +925,7 @@
                 "order": 6,
                 "byteLen": 2,
                 "type": "int",
-                "tag": "style",
+                "tag": "operatingMode",
                 "name": "Operating mode",
                 "validate": "enum(0,1,2,3,4,5,6)"
               },
@@ -1754,7 +1754,7 @@
                 "order": 6,
                 "byteLen": 2,
                 "type": "int",
-                "tag": "style",
+                "tag": "operatingMode",
                 "name": "Operating mode",
                 "validate": "enum(0,1,2,3,4,5,6)"
               },
