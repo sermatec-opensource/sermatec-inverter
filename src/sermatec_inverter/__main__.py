@@ -122,8 +122,10 @@ async def setFunc(**kwargs):
         print("Not enough data available to configure inverter -- contact developer.")
     except (ParameterNotFound):
         print("This parameter is not supported.")
-    
-    print("OK!")
+    except (ValueError):
+        print("Supplied value is not valid.")
+    else:
+        print("OK!")
 
     print("Disconnecting...", end = "")
     await smc.disconnect()
