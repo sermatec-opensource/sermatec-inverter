@@ -6,6 +6,7 @@ from .exceptions import *
 from pathlib import Path
 
 from .converters import *
+from .validators import *
 
 # Local module logger.
 logger = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ class SermatecProtocolParser:
     __CONVERTER_ON_OFF = MapConverter({
         0x55 : True,
         0xaa : False
-    }, 0x55, True)
+    }, 0x00, False)
 
     def __parseBatteryComStatus(self, value : int) -> str:
         if value == 0x0000:
@@ -173,7 +174,7 @@ class SermatecProtocolParser:
 
 
     class SermatecParameter:
-        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator, friendlyType : type):
+        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type):
             # Parameter friendlyType is used to signalize in what type the friendly value is expected, useful mainly for terminal UI,
             # where everything is passed as string by default
             self.command    = command
@@ -187,7 +188,7 @@ class SermatecProtocolParser:
             command   = 0x64,
             byteLength= 1,
             converter = __CONVERTER_ON_OFF,
-            validator = None,
+            validator = EnumValidator([0x55, 0xaa]),
             friendlyType = int
 
         ),
@@ -195,7 +196,7 @@ class SermatecProtocolParser:
             command   = 0x66,
             byteLength= 2,
             converter = __CONVERTER_OPERATING_MODE,
-            validator = None,
+            validator = EnumValidator([0x1, 0x2, 0x3, 0x4, 0x5]),
             friendlyType = str
         )
     }

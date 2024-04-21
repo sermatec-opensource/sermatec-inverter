@@ -344,6 +344,7 @@ class Sermatec:
             MissingTaggedData: If not enough data was supplied to build payload.
             CommandNotFoundInProtocol: The requested command is not available.
             ParameterNotFound: This parameter is not supported.
+            ValueError: If supplied value is invalid.
         """    
         
         taggedDataToSend = previousData
@@ -351,9 +352,13 @@ class Sermatec:
         # This may throw ParameterNotFound.    
         parameterInfo = self.parser.getParameterInfo(tag)
         
-        convertedValue = int.to_bytes(parameterInfo.converter.fromFriendly(value), byteorder="big", signed=False, length = parameterInfo.byteLength)
-        taggedDataToSend[tag] = convertedValue
-        _LOGGER.debug(f"Setting up tag '{tag}' with value '{convertedValue}'")
+        convertedValue = parameterInfo.converter.fromFriendly(value)
+        _LOGGER.debug(f"Setting up tag '{tag}' with converted value '{hex(convertedValue)}'")
+
+        if not parameterInfo.validator.validate(convertedValue):
+            raise ValueError
+
+        taggedDataToSend[tag] = int.to_bytes(convertedValue, byteorder="big", signed=False, length = parameterInfo.byteLength)
 
         if parameterInfo.command == 0x66:
             payload = self.parser.build66Payload(taggedDataToSend)
