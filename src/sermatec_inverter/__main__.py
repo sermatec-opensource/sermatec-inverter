@@ -99,10 +99,19 @@ async def setFunc(**kwargs):
         return
 
     try:
+        convertedValue = smc.parser.SERMATEC_PARAMETERS[kwargs["tag"]].friendlyType(kwargs["value"])
+    except ValueError:
+        print("Supplied value is not valid.")
+        print("Disconnecting...", end = "")
+        await smc.disconnect()
+        print("OK")
+        return
+
+    try:
         print("Contacting inverter...")
         data = await smc.getParameterData()
         print("Setting data...")
-        await smc.set(kwargs["tag"], kwargs["value"], data)
+        await smc.set(kwargs["tag"], convertedValue, data)
     except CommandNotFoundInProtocol:
         print("The command was not found in protocol for inverter's version, unable to parse. Try --raw to get raw bytes.")
     except (ProtocolFileMalformed, ParsingNotImplemented):
@@ -169,7 +178,7 @@ if __name__ == "__main__":
     setParser.add_argument(
         "value",
         help = "Value to set.",
-        type = int
+        type = str
     )
 
     listParser = subparsers.add_parser("list", help = "List supported sensors and other features.")
