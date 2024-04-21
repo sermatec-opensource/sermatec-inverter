@@ -173,18 +173,30 @@ class SermatecProtocolParser:
 
 
     class SermatecParameter:
-        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator):
+        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator, friendlyType : type):
+            # Parameter friendlyType is used to signalize in what type the friendly value is expected, useful mainly for terminal UI,
+            # where everything is passed as string by default
             self.command    = command
             self.byteLength = byteLength
             self.converter  = converter
             self.validator  = validator
+            self.friendlyType = friendlyType
 
     SERMATEC_PARAMETERS = {
         "onOff" : SermatecParameter(
             command   = 0x64,
             byteLength= 1,
             converter = __CONVERTER_ON_OFF,
-            validator = None
+            validator = None,
+            friendlyType = int
+
+        ),
+        "operatingMode" : SermatecParameter(
+            command   = 0x66,
+            byteLength= 2,
+            converter = __CONVERTER_OPERATING_MODE,
+            validator = None,
+            friendlyType = str
         )
     }
 
@@ -615,13 +627,13 @@ class SermatecProtocolParser:
             payload.extend(taggedData["price4"])
             payload.extend(taggedData["con"])
             payload.extend(taggedData["chargePower"])
-            payload.extend(taggedData["style"])
+            payload.extend(taggedData["operatingMode"])
             payload.extend(taggedData["gridSwitch"])
             payload.extend(taggedData["adjustMethod"])
             payload.extend(taggedData["refluxs"])
             payload.extend(taggedData["batteryCharge"])
             payload.extend(taggedData["soc"])
-            payload.extend(taggedData["soc"])
+            # Zeroes for "How many sets of data are there" field.
             payload.extend(b'\x00\x00')
         except KeyError:
             raise MissingTaggedData()
