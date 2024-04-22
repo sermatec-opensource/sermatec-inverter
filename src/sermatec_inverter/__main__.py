@@ -72,10 +72,7 @@ async def getFunc(**kwargs):
     data : dict = {}
 
     try:
-        if kwargs["command"] == "workingParameters":
-            data = await smc.getParameterData()
-        else:
-            data = await smc.get(kwargs["command"])
+        data = await smc.get(kwargs["command"])
     except CommandNotFoundInProtocol:
         print("The command was not found in protocol for inverter's version, unable to parse. Try --raw to get raw bytes.")
     except (ProtocolFileMalformed, ParsingNotImplemented):
