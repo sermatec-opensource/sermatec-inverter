@@ -49,3 +49,13 @@ class MapConverter(BaseConverter):
         else:
             return self.__inv_map[value]
         
+class DummyConverter(BaseConverter):
+    """This converter passes through the value without conversion."""
+    def __init__(self):
+        pass
+    
+    def toFriendly(self, value):
+        return value
+    
+    def fromFriendly(self, value):
+        return value
