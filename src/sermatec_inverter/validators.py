@@ -19,3 +19,22 @@ class EnumValidator(BaseValidator):
 
     def validate(self, value) -> bool:
         return (value in self.__allowed_values)
+    
+class IntRangeValidator(BaseValidator):
+    """Validate whether the int value is in defined range."""
+
+    def __init__(self, min_value : int, max_value : int):
+        """
+        Args:
+            min_value (int): Minimal allowed value.
+            max_value (int): Maximal allowed value.
+        """
+
+        self.__min_val = min_value
+        self.__max_val = max_value
+
+    def validate(self, value : int) -> bool:
+        if type(value) is int:
+            return self.__min_val <= int(value) <= self.__max_val
+        else:
+            return False
