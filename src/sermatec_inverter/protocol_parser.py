@@ -118,7 +118,7 @@ class SermatecProtocolParser:
         1: "Lithium battery",
         2: "Lead-acid battery",
         3: "Flow battery"
-    })
+    }, 0, "unknown")
 
     __CONVERTER_METER_PROTOCOL = MapConverter({
         1: "Not installed",
@@ -126,7 +126,7 @@ class SermatecProtocolParser:
         3: "Acrel Single-phase meter",
         4: "Eastron Three-phase meter",
         5: "Eastron Single-phase meter"
-    }, 0 "unknown")
+    }, 0, "unknown")
         
     # Using original name from name tag in protocol.json, not translated/converted one!
     NAME_BASED_FIELD_PARSERS : dict[str, BaseConverter] = {
