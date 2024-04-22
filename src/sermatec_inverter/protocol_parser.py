@@ -77,97 +77,66 @@ class SermatecProtocolParser:
         0xaa : False
     }, 0x00, False)
 
-    def __parseBatteryComStatus(self, value : int) -> str:
-        if value == 0x0000:
-            return "OK"
-        elif value == 0x0001:
-            return "Disconnected"
-        else:
-            return "Unknown"
+    __CONVERTER_MODEL_CODE = MapConverter({
+        0x0001: "10 kW",
+        0x0002: "5 kW",
+        0x0003: "6 kW",
+        0x0005: "3 kW"
+    }, 0x0000, "unknown")
 
-    def __parseModelCode(self, value : int) -> str:
-        if value == 0x0001:
-            return "10 kW"
-        elif value == 0x0002:
-            return "5 kW"
-        elif value == 0x0003:
-            return "6 kW"
-        elif value == 0x0005:
-            return "3 kW"
-    
-    def __parseBatteryManufacturer(self, value : int) -> str:
-        if value == 1:
-            return "No battery"
-        elif value == 2:
-            return "PylonTech High Voltage Battery"
-        elif value == 3:
-            return "PylonTech Low Voltage Battery"
-        elif value == 9:
-            return "Nelumbo HV Battery"
-        elif value == 12:
-            return "Generic High Voltage Battery"
-        elif value == 13:
-            return "Generic Low Voltage Battery"
-        elif value == 14:
-            return "Dyness High Voltage Battery"
-        elif value == 22:
-            return "BYD High Voltage Battery"
-        elif value == 23:
-            return "BYD Low Voltage Battery"
-        elif value == 25:
-            return "AOBO Battery"
-        elif value == 26:
-            return "Soluna 15K Pack HV"
-        elif value == 27:
-            return "Soluna 4K LV"
-        elif value == 28:
-            return "Soluna 3K LV"
-        elif value == 30:
-            return "Pylon Low Voltage Battery 485"
-        else:
-            return "Unknown"
+    __CONVERTER_BATTERY_MANUFACTURER = MapConverter({
+        1:  "No battery",
+        2:  "PylonTech High Voltage Battery",
+        3:  "PylonTech Low Voltage Battery",
+        4:  "BYD",
+        5:  "Chaowei",
+        6:  "HDXN",
+        7:  "YWLN",
+        9:  "XPGY",
+        10: "WOTAI",
+        11: "RuiPu",
+        12: "Cairi High Voltage",
+        13: "Cairi Low Voltage",
+        14: "Dyness High Voltage",
+        15: "Dyness Low Voltage",
+        16: "DLG Low Voltage",
+        17: "Wotai Low Voltage",
+        18: "SHDL",
+        19: "GuangYu",
+        20: "FeiBo",
+        21: "NJSG",
+        22: "BYD High Voltage",
+        23: "BYD Low Voltage",
+        24: "METERBOOST",
+        25: "AOBO",
+        26: "DLG High Voltage",
+        27: "Soluna Low Voltage",
+        28: "Soluna 3K"
+    }, 0, "unknown")
 
-    def __parseBatteryType(self, value : int) -> str:
-        if value == 1:
-            return "Lithium Battery"
-        elif value == 2:
-            return "Lead-acid Battery"
-        else:
-            return "Unknown battery type"
+    __CONVERTER_BATTERY_TYPE = MapConverter({
+        1: "Lithium battery",
+        2: "Lead-acid battery",
+        3: "Flow battery"
+    })
 
-    def __parseMeterProtocol(self, value : int) -> str:
-        if value == 1:
-            return "Not installed"
-        elif value == 2:
-            return "Acrel Three-phase meter"
-        elif value == 3:
-            return "Acrel Single-phase meter"
-        elif value == 4:
-            return "Three-phase Eastron meter"
-        elif value == 5:
-            return "Single-phase Eastron meter"
-        else:
-            return "Unknown meter"
-
-    def __parseEEBinarySensor(self, value : int) -> bool:
-        if value == 0xee00:
-            return True
-        else:
-            return False
+    __CONVERTER_METER_PROTOCOL = MapConverter({
+        1: "Not installed",
+        2: "Acrel Three-phase meter",
+        3: "Acrel Single-phase meter",
+        4: "Eastron Three-phase meter",
+        5: "Eastron Single-phase meter"
+    }, 0 "unknown")
         
-    def __parseProtocolVersion(self, value : int) -> str:
-        return f"{int(value / 100)}.{int((value / 10) % 10)}.{value % 10}"
-
     # Using original name from name tag in protocol.json, not translated/converted one!
     NAME_BASED_FIELD_PARSERS : dict[str, BaseConverter] = {
         "Charge and discharge status" : __CONVERTER_BATTERY_STATUS,
-        "Operating mode" : __CONVERTER_OPERATING_MODE
-        # "battery_communication_connection_status" : __parseBatteryComStatus,
-        # "model_code": __parseModelCode,
-        # "battery_manufacturer_number__code_list_": __parseBatteryManufacturer,
-        # "battery_communication_protocol_selection": __parseBatteryManufacturer,
-        # "dc_side_battery_type": __parseBatteryType,
-        # "meter_communication_protocol_selection": __parseMeterProtocol,
+        "Operating mode" : __CONVERTER_OPERATING_MODE,
+        "model code": __CONVERTER_MODEL_CODE,
+        "Battery manufacturer number (code list)": __CONVERTER_BATTERY_MANUFACTURER,
+        "Battery communication protocol selection": __CONVERTER_BATTERY_MANUFACTURER,
+        "DC side battery type": __CONVERTER_BATTERY_TYPE,
+        "Meter communication protocol selection": __CONVERTER_METER_PROTOCOL,
         # "meter_detection_function": __parseEEBinarySensor,
         # "three_phase_unbalanced_output": __parseEEBinarySensor
     }
