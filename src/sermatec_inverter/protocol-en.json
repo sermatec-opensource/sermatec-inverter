@@ -925,7 +925,7 @@
                 "order": 6,
                 "byteLen": 2,
                 "type": "int",
-                "tag": "style",
+                "tag": "operatingMode",
                 "name": "Operating mode",
                 "validate": "enum(0,1,2,3,4,5,6)"
               },
@@ -949,7 +949,7 @@
                 "order": 9,
                 "byteLen": 2,
                 "type": "hex",
-                "tag": "refluxs",
+                "tag": "antiBackflow",
                 "name": "anti-backflow function",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
                 "validate": "enumStr(ee00,00ee,0000)",
@@ -1451,7 +1451,7 @@
                 "order": 6,
                 "byteLen": 2,
                 "type": "int",
-                "tag": "style",
+                "tag": "operatingMode",
                 "name": "Operating mode",
                 "parser": "operatingMode"
               },
@@ -1473,7 +1473,7 @@
                 "order": 9,
                 "byteLen": 2,
                 "type": "hex",
-                "tag": "refluxs",
+                "tag": "antiBackflow",
                 "converter": "map(ee00:1, 00ee:2, default:0)",
                 "name": "anti-backflow function",
                 "unitType": "binary"
@@ -1754,7 +1754,7 @@
                 "order": 6,
                 "byteLen": 2,
                 "type": "int",
-                "tag": "style",
+                "tag": "operatingMode",
                 "name": "Operating mode",
                 "validate": "enum(0,1,2,3,4,5,6)"
               },
@@ -1778,7 +1778,7 @@
                 "order": 9,
                 "byteLen": 2,
                 "type": "hex",
-                "tag": "refluxs",
+                "tag": "antiBackflow",
                 "name": "anti-backflow function",
                 "converter": "map(1:ee00, 2:00ee, default:0000)",
                 "validate": "enumStr(ee00,00ee,0000)",
@@ -2134,7 +2134,7 @@
                 "order": 6,
                 "byteLen": 2,
                 "type": "int",
-                "tag": "style",
+                "tag": "operatingMode",
                 "name": "Operating mode",
                 "parser": "operatingMode"
               },
@@ -2156,7 +2156,7 @@
                 "order": 9,
                 "byteLen": 2,
                 "type": "hex",
-                "tag": "refluxs",
+                "tag": "antiBackflow",
                 "converter": "map(ee00:1, 00ee:2, default:0)",
                 "name": "anti-backflow function",
                 "unitType": "binary"
@@ -2455,7 +2455,7 @@
                 "order": 6,
                 "byteLen": 2,
                 "type": "int",
-                "tag": "style",
+                "tag": "operatingMode",
                 "name": "Operating mode",
                 "parser": "operatingMode"
               },
@@ -2477,7 +2477,7 @@
                 "order": 9,
                 "byteLen": 2,
                 "type": "hex",
-                "tag": "refluxs",
+                "tag": "antiBackflow",
                 "converter": "map(ee00:1, 00ee:2, default:0)",
                 "name": "anti-backflow function",
                 "unitType": "binary"

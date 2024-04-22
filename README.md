@@ -32,7 +32,11 @@ The script takes very few args to run:
         - e.g. `0x98`
         - use with care, may cause unexpected/dangerous behaviour
     - `set`: set configuration data
-        - not yet implemented
+        - *experimental support, may be dangerous and screw things up*,
+        - syntax: `set <tag> <value>`,
+        - see section [Configurable parameters](#configurable-parameters) for supported parameters and their allowed values,
+        - some parameters require to shut down the inverter before configuring,
+        - the script should refuse setting of invalid values, but either way, be very **VERY** careful.
 
 The script also takes few optional args:
 1. the `-v` flag to have a verbose output.
@@ -41,7 +45,7 @@ The script also takes few optional args:
 4. the `--raw` arg to not parse a response from the inverter (only raw data will be shown, useful for debugging, testing and development)
 5. the `--protocolFilePath` arg to supply a custom path to JSON describing the protocol. Usually not needed.
 
-#### Examples
+### Examples
 Having battery info on an inverter with 10.0.0.254 ip:
 ```bash
 python3 -m src.sermatec_inverter 10.0.0.254 get batteryStatus
@@ -51,6 +55,15 @@ Having grid info using the verbose mode with a 192.168.0.254 inverter with port 
 python3 -m src.sermatec_inverter -v --port=8900 192.168.0.254 get gridPVStatus
 ```
 
+### Configurable parameters
+| Tag | Description | Supported values | Inverter has to be shut down |
+|-----|-------------|------------------| ---------------------------- |
+| `onOff` | Turn inverter on or off. | 1: on, 0: off | no |
+| `operatingMode` | Change inverter operating mode. | "General Mode", "Energy Storage Mode", "Micro-grid", "Peak-Valley", "AC Coupling" | no |
+| `antiBackflow` | Enable backflow protection. | 1: on, 0: off | yes |
+| `soc` | Change lower-limit of on-grid battery SOC | 10-100 | no |
+
+## Download
 ### *Newest version:* Source
 ```
 git clone https://github.com/andreondra/sermatec-inverter.git
