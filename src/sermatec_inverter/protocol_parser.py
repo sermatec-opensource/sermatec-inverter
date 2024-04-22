@@ -178,6 +178,14 @@ class SermatecProtocolParser:
             validator    = EnumValidator([0xee00, 0x00ee]),
             friendlyType = int,
             shouldBeOff  = True
+        ),
+        "soc": SermatecParameter(
+            command      = 0x66,
+            byteLength   = 2,
+            converter    = DummyConverter(),
+            validator    = IntRangeValidator(10, 100),
+            friendlyType = int,
+            shouldBeOff  = False
         )
     }
 
