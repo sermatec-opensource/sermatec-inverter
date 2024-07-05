@@ -4,6 +4,7 @@ import re
 from typing import Any, Callable
 from .exceptions import *
 from pathlib import Path
+from enum import Enum, auto
 
 from .converters import *
 from .validators import *
@@ -179,7 +180,7 @@ class SermatecProtocolParser:
     }
 
 
-    class SermatecParameter:
+    class SermatecParameter:      
         def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool):
             # Parameter friendlyType is used to signalize in what type the friendly value is expected, useful mainly for terminal UI,
             # where everything is passed as string by default
@@ -190,39 +191,54 @@ class SermatecProtocolParser:
             self.friendlyType   = friendlyType
             self.shouldBeOff    = shouldBeOff
 
+    class SermatecSwitchParameter:
+        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool):
+            super().__init__(command, byteLength, converter, validator, friendlyType, shouldBeOff)
+
+    class SermatecSelectParameter:
+        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool):
+            super().__init__(command, byteLength, converter, validator, friendlyType, shouldBeOff)
+
+    class SermatecNumberParamter:
+        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool, min : int, max : int):
+            super().__init__(command, byteLength, converter, validator, friendlyType, shouldBeOff)
+            self.min = min
+            self.max = max
+
     SERMATEC_PARAMETERS = {
-        "onOff" : SermatecParameter(
+        "onOff" : SermatecSwitchParameter(
             command      = 0x64,
             byteLength   = 1,
             converter    = __CONVERTER_ON_OFF,
             validator    = EnumValidator([0x55, 0xaa]),
             friendlyType = int,
             shouldBeOff  = False
-
         ),
-        "operatingMode" : SermatecParameter(
+        "operatingMode" : SermatecSelectParameter(
             command      = 0x66,
             byteLength   = 2,
             converter    = __CONVERTER_OPERATING_MODE,
             validator    = EnumValidator([0x1, 0x2, 0x3, 0x4, 0x5]),
             friendlyType = str,
-            shouldBeOff  = False
+            shouldBeOff  = False,
         ),
-        "antiBackflow" : SermatecParameter(
+        "antiBackflow" : SermatecSwitchParameter(
             command      = 0x66,
             byteLength   = 2,
             converter    = __CONVERTER_EE_BINARY,
             validator    = EnumValidator([0xee00, 0x00ee]),
             friendlyType = int,
-            shouldBeOff  = True
+            shouldBeOff  = True,
         ),
-        "soc": SermatecParameter(
+        "soc": SermatecNumberParamter(
             command      = 0x66,
             byteLength   = 2,
             converter    = DummyConverter(),
             validator    = IntRangeValidator(10, 100),
             friendlyType = int,
-            shouldBeOff  = False
+            shouldBeOff  = False,
+            min          = 10,
+            max          = 100
         )
     }
 

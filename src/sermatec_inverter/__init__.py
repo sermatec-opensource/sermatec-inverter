@@ -1,9 +1,11 @@
 import logging
 import asyncio
-from . import protocol_parser
-from .exceptions import *
 from pathlib import Path
 from collections.abc import Callable
+from typing import Type
+
+from . import protocol_parser
+from .exceptions import *
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -210,6 +212,27 @@ class Sermatec:
                     sensorList.update({key: field})
 
         return sensorList
+    
+    def __listParams(self, paramType : Type[protocol_parser.SermatecProtocolParser.SermatecParameter], pcuVersion : int = None) -> dict:
+        # If no specific pcuVersion specified, use (possibly) previously discovered.
+        if not pcuVersion:
+            pcuVersion = self.pcuVersion
+
+        paramList : dict = {}
+        for name, param in self.parser.SERMATEC_PARAMETERS.items():
+            if isinstance(param, paramType):
+                paramList.update({name:param})
+        
+        return paramList
+
+    def listSwitches(self, pcuVersion : int = None) -> dict:
+        return self.__listParams(self.parser.SermatecSwitchParameter, pcuVersion)
+    
+    def listNumbers(self, pcuVersion : int = None) -> dict:
+        return self.__listParams(self.parser.SermatecNumberParamter, pcuVersion)
+    
+    def listSelects(self, pcuVersion : int = None) -> dict:
+        return self.__listParams(self.parser.SermatecSelectParameter, pcuVersion)
 
     def getQueryCommands(self, pcuVersion : int = None) -> dict:
         # If no specific pcuVersion specified, use (possibly) previously discovered.
