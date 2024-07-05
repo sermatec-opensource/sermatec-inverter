@@ -4,6 +4,7 @@ import re
 from typing import Any, Callable
 from .exceptions import *
 from pathlib import Path
+from enum import Enum, auto
 
 from .converters import *
 from .validators import *
@@ -71,6 +72,18 @@ class SermatecProtocolParser:
         0x00ee : False
     }, 0x0000, False)
 
+    # This converter is used for flags represented in protocol as int (instead bits as usual).
+    __CONVERTER_SIMPLE_BINARY = MapConverter({
+        1: True,
+        0: False
+    }, 1, True)
+    
+    # This converter is used for flags represented in protocol as int but with inverted meaning.
+    __CONVERTER_INVERTED_BINARY = MapConverter({
+        1: False,
+        0: True
+    }, 1, True)
+
     # Use only for converting from friendly value to set value in 0x64 command.
     __CONVERTER_ON_OFF = MapConverter({
         0x55 : True,
@@ -128,6 +141,26 @@ class SermatecProtocolParser:
         5: "Eastron Single-phase meter"
     }, 0, "unknown")
         
+    __CONVERTER_AC_OP_STATUS = MapConverter({
+        0: "not running",
+        1: "self-check",
+        2: "standby",
+        3: "on-grid",
+        4: "off-grid",
+        5: "backup mode"
+    }, 0, "unknown")
+
+    __CONVERTER_AC_OP_MODE = MapConverter({
+        1: "MPPT mode",
+        2: "Constant current mode",
+        3: "PV constant voltage mode",
+        4: "AC rectification mode",
+        5: "Secondary constant current mode",
+        6: "Constant DC power mode",
+        7: "Constant AC power mode",
+        0: "unknown mode"
+    }, 0, "unknown mode")
+
     # Using original name from name tag in protocol.json, not translated/converted one!
     NAME_BASED_FIELD_PARSERS : dict[str, BaseConverter] = {
         "Charge and discharge status" : __CONVERTER_BATTERY_STATUS,
@@ -137,12 +170,17 @@ class SermatecProtocolParser:
         "Battery communication protocol selection": __CONVERTER_BATTERY_MANUFACTURER,
         "DC side battery type": __CONVERTER_BATTERY_TYPE,
         "Meter communication protocol selection": __CONVERTER_METER_PROTOCOL,
-        # "meter_detection_function": __parseEEBinarySensor,
-        # "three_phase_unbalanced_output": __parseEEBinarySensor
+        "Three-phase unbalanced output": __CONVERTER_EE_BINARY,
+        "Meter detection function": __CONVERTER_EE_BINARY,
+        "battery warning": __CONVERTER_SIMPLE_BINARY,
+        "battery error": __CONVERTER_SIMPLE_BINARY,
+        "Battery communication connection status": __CONVERTER_INVERTED_BINARY,
+        "AC side operation mode": __CONVERTER_AC_OP_STATUS,
+        "AC side running status": __CONVERTER_AC_OP_MODE
     }
 
 
-    class SermatecParameter:
+    class SermatecParameter:      
         def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool):
             # Parameter friendlyType is used to signalize in what type the friendly value is expected, useful mainly for terminal UI,
             # where everything is passed as string by default
@@ -153,39 +191,54 @@ class SermatecProtocolParser:
             self.friendlyType   = friendlyType
             self.shouldBeOff    = shouldBeOff
 
+    class SermatecSwitchParameter(SermatecParameter):
+        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool):
+            super().__init__(command, byteLength, converter, validator, friendlyType, shouldBeOff)
+
+    class SermatecSelectParameter(SermatecParameter):
+        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool):
+            super().__init__(command, byteLength, converter, validator, friendlyType, shouldBeOff)
+
+    class SermatecNumberParamter(SermatecParameter):
+        def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool, min : int, max : int):
+            super().__init__(command, byteLength, converter, validator, friendlyType, shouldBeOff)
+            self.min = min
+            self.max = max
+
     SERMATEC_PARAMETERS = {
-        "onOff" : SermatecParameter(
+        "onOff" : SermatecSwitchParameter(
             command      = 0x64,
             byteLength   = 1,
             converter    = __CONVERTER_ON_OFF,
             validator    = EnumValidator([0x55, 0xaa]),
             friendlyType = int,
             shouldBeOff  = False
-
         ),
-        "operatingMode" : SermatecParameter(
+        "operatingMode" : SermatecSelectParameter(
             command      = 0x66,
             byteLength   = 2,
             converter    = __CONVERTER_OPERATING_MODE,
             validator    = EnumValidator([0x1, 0x2, 0x3, 0x4, 0x5]),
             friendlyType = str,
-            shouldBeOff  = False
+            shouldBeOff  = False,
         ),
-        "antiBackflow" : SermatecParameter(
+        "antiBackflow" : SermatecSwitchParameter(
             command      = 0x66,
             byteLength   = 2,
             converter    = __CONVERTER_EE_BINARY,
             validator    = EnumValidator([0xee00, 0x00ee]),
             friendlyType = int,
-            shouldBeOff  = True
+            shouldBeOff  = True,
         ),
-        "soc": SermatecParameter(
+        "soc": SermatecNumberParamter(
             command      = 0x66,
             byteLength   = 2,
             converter    = DummyConverter(),
             validator    = IntRangeValidator(10, 100),
             friendlyType = int,
-            shouldBeOff  = False
+            shouldBeOff  = False,
+            min          = 10,
+            max          = 100
         )
     }
 
@@ -510,9 +563,9 @@ class SermatecProtocolParser:
                     convertedBytes = int.from_bytes(currentFieldData, byteorder = "big", signed = False)
                     binLength = fieldEndBit - fieldFromBit
                     binaryMask = (1 << (binLength)) - 1
-                    logger.debug(f"binary mask: {binaryMask}")
-                    convertedBytes = (convertedBytes >> binLength) & binaryMask
-                    newField["value"] = bin(convertedBytes).removeprefix("0b").zfill(binLength)
+                    convertedBytes = (convertedBytes >> fieldFromBit) & binaryMask
+                    logger.debug(f"Masked value: {convertedBytes}")
+                    newField["value"] = convertedBytes
                 elif fieldType == "hex":
                     newField["value"] =  int.from_bytes(currentFieldData, byteorder = "big", signed = False)
                 elif fieldType == "preserve":
