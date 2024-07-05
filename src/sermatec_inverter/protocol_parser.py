@@ -191,15 +191,15 @@ class SermatecProtocolParser:
             self.friendlyType   = friendlyType
             self.shouldBeOff    = shouldBeOff
 
-    class SermatecSwitchParameter:
+    class SermatecSwitchParameter(SermatecParameter):
         def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool):
             super().__init__(command, byteLength, converter, validator, friendlyType, shouldBeOff)
 
-    class SermatecSelectParameter:
+    class SermatecSelectParameter(SermatecParameter):
         def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool):
             super().__init__(command, byteLength, converter, validator, friendlyType, shouldBeOff)
 
-    class SermatecNumberParamter:
+    class SermatecNumberParamter(SermatecParameter):
         def __init__(self, command : int, byteLength : int, converter : BaseConverter, validator : BaseValidator, friendlyType : type, shouldBeOff : bool, min : int, max : int):
             super().__init__(command, byteLength, converter, validator, friendlyType, shouldBeOff)
             self.min = min
