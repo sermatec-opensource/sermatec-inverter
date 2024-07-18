@@ -2,8 +2,6 @@
 
 # Sermatec Solar Inverter
 
-🚧🚧🚧 **NOTICE: currently a big refactoring is in progress. Use master version only for testing.** 🚧🚧🚧
-
 This repository contains local API documentation for the Sermatec solar inverter and communication scripts.
 
 Whole communication with the inverter runs through the UART-TCP converter USR-WIFI232-B2, which supports 802.11 b/g/n. It works either in a station mode (for connection to the home AP) or in a access point mode (local connection mode in the official ap). See docs below for more technical information.
@@ -12,14 +10,15 @@ Whole communication with the inverter runs through the UART-TCP converter USR-WI
 ### Generic contribution guide
 If you want to contribute, please check the guidelines first: [`CONTRIBUTING.md`](docs/CONTRIBUTING.md).
 
-### Reverse-engineering (development) guides
-If you want to help with decoding the proprietary Sermatec protocol, choose if you want to use the physical Android device or a virtual one and continue with the appropriate guide.
+### (Obsolete) Reverse-engineering (development) guides
+~~If you want to help with decoding the proprietary Sermatec protocol, choose if you want to use the physical Android device or a virtual one and continue with the appropriate guide.~~
+This is no longer needed due to protocol description extracted from the official app. However, the guides may be still useful for another project, so I preserve them here.
 - [`RE_AVD.md`](docs/RE_AVD.md): Android virtual device configuration.
 - [`RE_PHYSICAL_DEVICE.md`](docs/RE_PHYSICAL_DEVICE.md): Physical device configuration.
 - [`RE_DATA_INSPECTION.md`](docs/RE_DATA_INSPECTION.md): Data inspection guide.
 
 ### Inverter and protocol docs
-- [`PROTOCOL.md`](docs/PROTOCOL.md): protocol documentation.
+This is available in [separate repository](https://github.com/sermatec-opensource/docs).
 
 ## Console interface usage
 
@@ -86,7 +85,7 @@ Once the container started, you'll be in a bash environment with all your need f
 python3 -m sermatec_inverter --help
 ```
 
-### *Stable version:* PyPI package
+### *Old stable version:* PyPI package
 ```
 pip install sermatec-inverter
 python3 -m sermatec_inverter --help
